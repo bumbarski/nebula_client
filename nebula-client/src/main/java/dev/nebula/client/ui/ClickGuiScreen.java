@@ -245,7 +245,7 @@ public final class ClickGuiScreen extends Screen {
 		Hit hit = new Hit(bx, by, bw, bh);
 		hit.onLeft = () -> {
 			ConfigManager.save(NebulaClient.modules());
-			minecraft.setScreen(new HudEditorScreen(this));
+			minecraft.setScreenAndShow(new HudEditorScreen(this));
 		};
 		hits.add(hit);
 	}

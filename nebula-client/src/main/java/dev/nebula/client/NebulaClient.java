@@ -43,8 +43,8 @@ public final class NebulaClient implements ClientModInitializer {
 
 		ClientTickEvents.END_CLIENT_TICK.register(mc -> {
 			while (openGuiKey.consumeClick()) {
-				if (mc.player != null && mc.screen == null) {
-					mc.setScreen(new ClickGuiScreen());
+				if (mc.player != null && mc.gui.screen() == null) {
+					mc.setScreenAndShow(new ClickGuiScreen());
 				}
 			}
 			if (mc.player != null) {

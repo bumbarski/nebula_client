@@ -13,7 +13,8 @@ public final class HudManager {
 
 	public static void render(GuiGraphicsExtractor g) {
 		Minecraft mc = Minecraft.getInstance();
-		if (mc.player == null || mc.options.hideGui) return;
+		// Po F1 (ukryty interfejs) vanilla w ogole nie rysuje HUD, wiec osobny warunek nie jest potrzebny.
+		if (mc.player == null) return;
 
 		ModuleManager modules = NebulaClient.modules();
 		for (Module m : modules.all()) {

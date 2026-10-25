@@ -41,7 +41,7 @@ jobs:
           EOF
 
       - name: Diagnostyka API Minecrafta
-        if: failure()
+        if: always()
         run: |
           JAR=""
           for j in $(find ~/.gradle ~/.cache -name '*.jar' -size +5M 2>/dev/null); do
@@ -49,17 +49,19 @@ jobs:
           done
           {
             echo "JAR: $JAR"
-            echo "--- Minecraft: pole/getter typu Gui ---"
-            javap -p -cp "$JAR" net.minecraft.client.Minecraft | grep -E 'client\.gui\.Gui [a-zA-Z]|client\.gui\.Gui get|Gui gui'
-            echo "--- Gui: hide/hud/visible ---"
-            javap -p -cp "$JAR" net.minecraft.client.gui.Gui | grep -iE 'hide|hidden|visib|hudVis|isHud' | grep -v lambda | head -15
-            echo "--- Options: hud/overlay ---"
-            javap -p -cp "$JAR" net.minecraft.client.Options | grep -iE 'hud|overlay' | grep -v lambda | head -10
+            echo "--- Minecraft.setScreenAndShow: wywolania ---"
+            javap -p -c -cp "$JAR" net.minecraft.client.Minecraft | awk '/public void setScreenAndShow/{f=1} f{print} f&&/^$/{exit}' | grep -E 'invoke' | sed 's/^ *[0-9]*: //' | head -25
+            echo "--- Gui.setScreen: wywolania ---"
+            javap -p -c -cp "$JAR" net.minecraft.client.gui.Gui | awk '/public void setScreen\(/{f=1} f{print} f&&/^$/{exit}' | grep -E 'invoke' | sed 's/^ *[0-9]*: //' | head -25
+            echo "--- Gui: odwolania do hide ---"
+            javap -p -c -cp "$JAR" net.minecraft.client.gui.Gui | grep -iE 'hide|hidden' | sed 's/^ *[0-9]*: //' | sort -u | head -10
+            echo "--- Minecraft: odwolania do hide ---"
+            javap -p -c -cp "$JAR" net.minecraft.client.Minecraft | grep -iE 'hide|hidden' | sed 's/^ *[0-9]*: //' | sort -u | head -10
           } > diag.txt 2>&1
           python3 - <<'EOF'
           s = open('diag.txt', encoding='utf-8', errors='replace').read()[:7000]
           s = s.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
-          print('::error title=Diagnostyka::' + s)
+          print('::notice title=Diagnostyka::' + s)
           EOF
 
       - name: Upload jar
