@@ -40,30 +40,6 @@ jobs:
           print('::error title=Log builda::' + s)
           EOF
 
-      - name: Diagnostyka API Minecrafta
-        if: always()
-        run: |
-          JAR=""
-          for j in $(find ~/.gradle ~/.cache -name '*.jar' -size +5M 2>/dev/null); do
-            if unzip -l "$j" 2>/dev/null | grep -q 'net/minecraft/client/Minecraft.class'; then JAR="$j"; break; fi
-          done
-          {
-            echo "JAR: $JAR"
-            echo "--- Minecraft.setScreenAndShow: wywolania ---"
-            javap -p -c -cp "$JAR" net.minecraft.client.Minecraft | awk '/public void setScreenAndShow/{f=1} f{print} f&&/^$/{exit}' | grep -E 'invoke' | sed 's/^ *[0-9]*: //' | head -25
-            echo "--- Gui.setScreen: wywolania ---"
-            javap -p -c -cp "$JAR" net.minecraft.client.gui.Gui | awk '/public void setScreen\(/{f=1} f{print} f&&/^$/{exit}' | grep -E 'invoke' | sed 's/^ *[0-9]*: //' | head -25
-            echo "--- Gui: odwolania do hide ---"
-            javap -p -c -cp "$JAR" net.minecraft.client.gui.Gui | grep -iE 'hide|hidden' | sed 's/^ *[0-9]*: //' | sort -u | head -10
-            echo "--- Minecraft: odwolania do hide ---"
-            javap -p -c -cp "$JAR" net.minecraft.client.Minecraft | grep -iE 'hide|hidden' | sed 's/^ *[0-9]*: //' | sort -u | head -10
-          } > diag.txt 2>&1
-          python3 - <<'EOF'
-          s = open('diag.txt', encoding='utf-8', errors='replace').read()[:7000]
-          s = s.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
-          print('::notice title=Diagnostyka::' + s)
-          EOF
-
       - name: Upload jar
         uses: actions/upload-artifact@v4
         with:
