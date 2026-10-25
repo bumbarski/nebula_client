@@ -40,6 +40,28 @@ jobs:
           print('::error title=Log builda::' + s)
           EOF
 
+      - name: Diagnostyka API Minecrafta
+        if: failure()
+        run: |
+          JAR=""
+          for j in $(find ~/.gradle ~/.cache -name '*.jar' -size +5M 2>/dev/null); do
+            if unzip -l "$j" 2>/dev/null | grep -q 'net/minecraft/client/Minecraft.class'; then JAR="$j"; break; fi
+          done
+          {
+            echo "JAR: $JAR"
+            echo "--- Minecraft (screen) ---"
+            javap -p -cp "$JAR" net.minecraft.client.Minecraft | grep -iE 'screen' | head -30
+            echo "--- Options (hide/gui) ---"
+            javap -p -cp "$JAR" net.minecraft.client.Options | grep -iE 'hide|gui' | head -20
+            echo "--- Gui (screen) ---"
+            javap -p -cp "$JAR" net.minecraft.client.gui.Gui | grep -iE 'screen|hidden|hide' | head -20
+          } > diag.txt 2>&1
+          python3 - <<'EOF'
+          s = open('diag.txt', encoding='utf-8', errors='replace').read()[:7000]
+          s = s.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+          print('::error title=Diagnostyka::' + s)
+          EOF
+
       - name: Upload jar
         uses: actions/upload-artifact@v4
         with:
