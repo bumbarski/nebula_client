@@ -4,8 +4,16 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  # 1. Mod Nebula Client (.jar). Na gałęzi main trafia do wydania "nebula-latest", skąd pobiera go launcher.
+  mod:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -27,23 +35,96 @@ jobs:
 
       - name: Pokaż błędy builda
         if: failure()
-        run: |
-          {
-            echo "--- BLEDY ---"
-            grep -nE "error:|What went wrong|Could not|not found|Unsupported" -A4 build.log | head -90
-            echo "--- KONIEC LOGU ---"
-            tail -30 build.log
-          } > summary.txt
-          python3 - <<'EOF'
-          s = open('summary.txt', encoding='utf-8', errors='replace').read()[:7000]
-          s = s.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
-          print('::error title=Log builda::' + s)
-          EOF
+        run: node ../launcher/test/annotate.js build.log "Log builda moda" error 7000
 
-      - name: Upload jar
-        uses: actions/upload-artifact@v4
+      - name: Przygotuj jar do wydania
+        run: |
+          mkdir -p ../dist-mod
+          find build/libs -name 'nebula-client-*.jar' ! -name '*-sources.jar' -exec cp {} ../dist-mod/ \;
+          ls -la ../dist-mod
+
+      - uses: actions/upload-artifact@v4
         with:
           name: nebula-client
-          path: |
-            nebula-client/build/libs/*.jar
-            !nebula-client/build/libs/*-sources.jar
+          path: dist-mod/*.jar
+
+      - name: Publikuj jar w wydaniu nebula-latest
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nebula-latest
+          name: Nebula (najnowszy build)
+          body: |
+            Automatyczny build z commita ${{ github.sha }}.
+            - nebula-client-*.jar: mod Nebula Client (launcher pobiera go sam)
+            - NebulaLauncher-*.exe: launcher dla Windows
+          make_latest: "true"
+          fail_on_unmatched_files: true
+          files: dist-mod/nebula-client-*.jar
+
+  # 2. Launcher (.exe) budowany na Windows i dołączany do tego samego wydania.
+  launcher:
+    needs: mod
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: launcher
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Zależności
+        run: npm install --no-audit --no-fund > npm.log 2>&1
+
+      - name: Testy launchera
+        run: npm test > test.log 2>&1
+
+      - name: Zbuduj .exe
+        run: npm run dist > dist.log 2>&1
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - name: Pokaż logi przy błędzie
+        if: failure()
+        run: |
+          node test/annotate.js npm.log "npm install" error 3000
+          node test/annotate.js test.log "Testy launchera" error 3000
+          node test/annotate.js dist.log "electron-builder" error 5000
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nebula-launcher
+          path: launcher/dist/NebulaLauncher-*.exe
+
+      - name: Dołącz .exe do wydania
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nebula-latest
+          fail_on_unmatched_files: true
+          files: launcher/dist/NebulaLauncher-*.exe
+
+  # 3. Test na prawdziwych serwerach Mojang/Fabric/Modrinth + próbny start gry bez okna.
+  smoke:
+    needs: mod
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: launcher
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Test na prawdziwych serwerach
+        run: node test/smoke-net.js > smoke.out 2>&1
+
+      - name: Raport
+        if: always()
+        run: node test/annotate.js smoke-report.txt "Smoke test" notice 7500

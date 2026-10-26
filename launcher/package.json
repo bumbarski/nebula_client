@@ -8,8 +8,9 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "test": "node test/run.js",
-    "dist": "electron-builder --win portable --publish never"
+    "test": "node test/unit.js",
+    "dist": "electron-builder --win portable --publish never",
+    "smoke": "node test/smoke-net.js"
   },
   "devDependencies": {
     "electron": "^33.2.0",
@@ -24,12 +25,6 @@
       "src/**/*",
       "renderer/**/*",
       "package.json"
-    ],
-    "extraResources": [
-      {
-        "from": "resources/mods",
-        "to": "mods"
-      }
     ],
     "win": {
       "target": [
