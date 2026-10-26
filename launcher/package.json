@@ -1,0 +1,41 @@
+{
+  "name": "nebula-launcher",
+  "version": "0.1.0",
+  "description": "Nebula Launcher: Minecraft + Fabric + gotowa paczka modów",
+  "main": "main.js",
+  "author": "bumbarski",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "test": "node test/run.js",
+    "dist": "electron-builder --win portable --publish never"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "dev.nebula.launcher",
+    "productName": "Nebula Launcher",
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "renderer/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/mods",
+        "to": "mods"
+      }
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "artifactName": "NebulaLauncher-${version}.${ext}"
+    }
+  }
+}
