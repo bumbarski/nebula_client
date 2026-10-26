@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "test": "node test/unit.js",
+    "test": "node test/unit.js && node test/main-smoke.js",
     "dist": "electron-builder --win portable --publish never",
     "smoke": "node test/smoke-net.js"
   },
