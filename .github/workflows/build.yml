@@ -37,6 +37,20 @@ jobs:
         if: failure()
         run: node ../launcher/test/annotate.js build.log "Log builda moda" error 7000
 
+      - name: TYMCZASOWA diagnostyka API Minecrafta
+        if: always()
+        run: |
+          JAR=$(find ~/.gradle/caches/fabric-loom -name 'minecraft-client.jar' | head -1)
+          sig() { javap -p -cp "$JAR" "$1" 2>&1 | grep -E "$2" | grep -v lambda | sed 's/net\.minecraft\.//g' | head -${3:-40}; }
+          { echo "JAR: $JAR"; echo "--- GuiGraphicsExtractor: przedmioty"; sig net.minecraft.client.gui.GuiGraphicsExtractor 'tem|Item'; } > d1.txt
+          { echo "--- Camera"; sig net.minecraft.client.Camera 'public|protected|private .*\(' 60; } > d2.txt
+          { echo "--- Entity: obrot"; sig net.minecraft.world.entity.Entity 'turn|setYRot|setXRot|getViewYRot|getViewXRot|getYRot|getXRot' 20;
+            echo "--- MouseHandler"; sig net.minecraft.client.MouseHandler 'turn|Turn|move|Move' 20; } > d3.txt
+          { echo "--- CameraType"; javap -p -cp "$JAR" net.minecraft.client.CameraType 2>&1 | sed 's/net\.minecraft\.//g' | head -25;
+            echo "--- Options: kamera"; sig net.minecraft.client.Options 'ameraType|CameraType' 10;
+            echo "--- GameRenderer: kamera"; sig net.minecraft.client.renderer.GameRenderer 'amera' 25; } > d4.txt
+          for n in 1 2 3 4; do node ../launcher/test/annotate.js d$n.txt "Diag $n" notice 6500; done
+
       - name: Przygotuj jar do wydania
         run: |
           mkdir -p ../dist-mod
