@@ -139,7 +139,10 @@ pre#log {
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: grid; place-items: center; padding: 20px; z-index: 10; }
 .modal { width: min(640px, 100%); max-height: 100%; overflow-y: auto; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 22px; }
 .modal h2 { font-size: 18px; margin-bottom: 16px; }
-.modal .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+.modal .actions {
+  display: flex; gap: 10px; justify-content: flex-end; margin: 18px -22px -22px; padding: 14px 22px;
+  position: sticky; bottom: -22px; background: var(--panel); border-top: 1px solid var(--border);
+}
 
 #toast { position: fixed; right: 22px; bottom: 22px; display: flex; flex-direction: column; gap: 8px; z-index: 20; }
 .toast { padding: 11px 16px; border-radius: 10px; background: var(--panel2); border: 1px solid var(--border); box-shadow: 0 6px 24px rgba(0,0,0,.35); max-width: 420px; }

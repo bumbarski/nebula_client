@@ -51,7 +51,7 @@
         h('h1', {}, 'Instalacje'),
         h('button', { class: 'btn primary', onclick: () => openEditor(null) }, '+ Nowa instalacja'),
       ),
-      N.s.instances.map(card),
+      ...N.s.instances.map(card),
     );
   };
 
