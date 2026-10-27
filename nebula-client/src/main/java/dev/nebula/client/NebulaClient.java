@@ -41,6 +41,8 @@ public final class NebulaClient implements ClientModInitializer {
 				category
 		));
 
+		modules.freelook().registerKey(category);
+
 		ClientTickEvents.END_CLIENT_TICK.register(mc -> {
 			while (openGuiKey.consumeClick()) {
 				if (mc.player != null && mc.gui.screen() == null) {

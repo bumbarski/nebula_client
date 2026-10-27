@@ -7,6 +7,7 @@
   "authors": ["Ty"],
   "license": "MIT",
   "environment": "client",
+  "mixins": ["nebula.mixins.json"],
   "entrypoints": {
     "client": ["dev.nebula.client.NebulaClient"]
   },

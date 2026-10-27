@@ -6,6 +6,8 @@ import dev.nebula.client.module.impl.ClockModule;
 import dev.nebula.client.module.impl.CoordsModule;
 import dev.nebula.client.module.impl.CpsModule;
 import dev.nebula.client.module.impl.FpsModule;
+import dev.nebula.client.module.impl.FreelookModule;
+import dev.nebula.client.module.impl.ToggleKeysModule;
 import dev.nebula.client.module.impl.KeystrokesModule;
 import dev.nebula.client.module.impl.PingModule;
 import dev.nebula.client.module.impl.PotionModule;
@@ -18,6 +20,12 @@ import java.util.List;
 
 public final class ModuleManager {
 	private final List<Module> all = new ArrayList<>();
+
+	private final FreelookModule freelook = new FreelookModule();
+
+	public FreelookModule freelook() {
+		return freelook;
+	}
 
 	public ModuleManager() {
 		// kolejnosc = kolejnosc w ClickGUI
@@ -32,6 +40,9 @@ public final class ModuleManager {
 
 		register(new AppearanceModule());
 		register(new WatermarkModule());
+
+		register(freelook);
+		register(new ToggleKeysModule());
 	}
 
 	private void register(Module module) {

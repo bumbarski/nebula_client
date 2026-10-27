@@ -2,7 +2,8 @@ package dev.nebula.client.module;
 
 public enum Category {
 	HUD("HUD"),
-	VISUAL("Wizualne");
+	VISUAL("Wizualne"),
+	GAME("Gra");
 
 	public final String label;
 
