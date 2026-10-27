@@ -5,7 +5,10 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "CameraMixin",
-    "EntityMixin"
+    "EntityMixin",
+    "LevelRendererMixin",
+    "OptionInstanceMixin",
+    "ItemInHandRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

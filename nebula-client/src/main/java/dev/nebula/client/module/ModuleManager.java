@@ -2,6 +2,10 @@ package dev.nebula.client.module;
 
 import dev.nebula.client.module.impl.AppearanceModule;
 import dev.nebula.client.module.impl.ArmorModule;
+import dev.nebula.client.module.impl.BlockOutlineModule;
+import dev.nebula.client.module.impl.GammaModule;
+import dev.nebula.client.module.impl.ItemCooldownModule;
+import dev.nebula.client.module.impl.ViewModelModule;
 import dev.nebula.client.module.impl.ClockModule;
 import dev.nebula.client.module.impl.CoordsModule;
 import dev.nebula.client.module.impl.CpsModule;
@@ -37,9 +41,13 @@ public final class ModuleManager {
 		register(new KeystrokesModule());
 		register(new ArmorModule());
 		register(new PotionModule());
+		register(new ItemCooldownModule());
 
 		register(new AppearanceModule());
 		register(new WatermarkModule());
+		register(new BlockOutlineModule());
+		register(new GammaModule());
+		register(new ViewModelModule());
 
 		register(freelook);
 		register(new ToggleKeysModule());

@@ -37,17 +37,6 @@ jobs:
         if: failure()
         run: node ../launcher/test/annotate.js build.log "Log builda moda" error 7000
 
-      - name: Diagnostyka API (tymczasowa)
-        run: |
-          JAR=$(find ~/.gradle/caches/fabric-loom -name 'minecraft-client.jar' | head -1)
-          sig() { javap -p -cp "$JAR" "$1" 2>&1 | grep -E "$2" | grep -v lambda | sed 's/net\.minecraft\.//g' | head -${3:-40}; }
-          body() { javap -p -c -cp "$JAR" "$1" 2>&1 | awk -v m="$2" 'index($0,m){f=1} f{print} f&&/^$/{exit}' | grep -E 'invoke|ldc|getfield|putfield|getstatic' | sed 's/^ *[0-9]*: //; s/net\/minecraft\///g' | head -${3:-40}; }
-          { echo "--- ItemInHandRenderer metody"; javap -p -cp "$JAR" net.minecraft.client.renderer.ItemInHandRenderer 2>&1 | grep -E '\(' | grep -v lambda | sed 's/net\.minecraft\.//g' | head -30; } > d1.txt
-          { echo "--- LevelRenderer.submitHitOutline"; body net.minecraft.client.renderer.LevelRenderer 'private void submitHitOutline' 40;
-            echo "--- BlockOutlineRenderState"; javap -p -cp "$JAR" net.minecraft.client.renderer.state.level.BlockOutlineRenderState 2>&1 | sed 's/net\.minecraft\.//g' | head -20; } > d2.txt
-          { echo "--- LevelRenderer.submitBlockOutline"; body net.minecraft.client.renderer.LevelRenderer 'private void submitBlockOutline' 40; } > d3.txt
-          for n in 1 2 3; do node ../launcher/test/annotate.js d$n.txt "Diag $n" notice 6500; done
-
       - name: Przygotuj jar do wydania
         run: |
           mkdir -p ../dist-mod
