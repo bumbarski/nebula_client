@@ -37,6 +37,21 @@ jobs:
         if: failure()
         run: node ../launcher/test/annotate.js build.log "Log builda moda" error 7000
 
+      - name: Diagnostyka API (tymczasowa)
+        run: |
+          JAR=$(find ~/.gradle/caches/fabric-loom -name 'minecraft-client.jar' | head -1)
+          sig() { javap -p -cp "$JAR" "$1" 2>&1 | grep -E "$2" | grep -v lambda | sed 's/net\.minecraft\.//g' | head -${3:-40}; }
+          { echo "--- Options gamma"; sig net.minecraft.client.Options 'gamma' 5;
+            echo "--- OptionInstance"; sig net.minecraft.client.OptionInstance 'get\(|set\(|public|protected' 25;
+            echo "--- ItemCooldowns"; sig net.minecraft.world.item.ItemCooldowns 'public' 15;
+            echo "--- Player cooldowns"; sig net.minecraft.world.entity.player.Player 'ooldown' 5; } > d1.txt
+          { echo "--- ItemInHandRenderer"; sig net.minecraft.client.renderer.ItemInHandRenderer 'void |float ' 30;
+            echo "--- Lightmap"; for c in net.minecraft.client.renderer.LightTexture net.minecraft.client.renderer.Lightmap net.minecraft.client.renderer.state.LightmapRenderState; do sig $c 'amma|ightness|ightNight|ightmap' 8; done; } > d2.txt
+          { echo "--- LevelRenderer outline"; sig net.minecraft.client.renderer.LevelRenderer 'utline|Outline' 15;
+            echo "--- ShapeRenderer"; sig net.minecraft.client.renderer.ShapeRenderer '.*' 12;
+            echo "--- BlockOutlineRenderState"; sig net.minecraft.client.renderer.state.BlockOutlineRenderState '.*' 10; } > d3.txt
+          for n in 1 2 3; do node ../launcher/test/annotate.js d$n.txt "Diag $n" notice 6500; done
+
       - name: Przygotuj jar do wydania
         run: |
           mkdir -p ../dist-mod
