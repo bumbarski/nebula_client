@@ -11,64 +11,70 @@ import dev.nebula.client.setting.NumberSetting;
 import dev.nebula.client.setting.Setting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * Glowne menu klienta (Prawy Shift). Panele per kategoria, przelaczniki modulow,
- * rozwijane ustawienia (PPM), suwaki, przeciaganie paneli.
+ * Glowne menu klienta (Prawy Shift): jedno okno, kategorie po lewej, karty modulow z plynnymi
+ * przelacznikami, rozwijane ustawienia (PPM lub strzalka), wyszukiwarka i przewijanie.
  */
 public final class ClickGuiScreen extends Screen {
-	private static final int PANEL_W = 132;
-	private static final int HEADER_H = 22;
-	private static final int ROW_H = 18;
+	private static final int SIDEBAR = 120;
+	private static final int CARD_H = 34;
+	private static final int GAP = 6;
 
-	// pozycje paneli i rozwiniecia przezywaja zamkniecie menu
-	private static final Map<Category, int[]> POSITIONS = new EnumMap<>(Category.class);
+	// wybrana zakladka i rozwiniecia przezywaja zamkniecie menu
+	private static int tab = 0;
 	private static final Set<Module> EXPANDED = new HashSet<>();
 
+	private static final int CARD = 0xFF1E1E2B;
+	private static final int CARD_HOVER = 0xFF262637;
+	private static final int SETTINGS_BG = 0xFF161621;
+
 	private final Map<Module, Float> toggleAnim = new HashMap<>();
+	private final Map<Module, Float> expandAnim = new HashMap<>();
 	private final List<Hit> hits = new ArrayList<>();
 
 	private final long openedAt = System.nanoTime();
 	private long lastFrame = System.nanoTime();
 
-	private Category draggingPanel;
-	private int dragOffX;
-	private int dragOffY;
+	private String query = "";
+	private float scroll;
+	private float scrollTarget;
+	private int viewTop;
+	private int viewBottom;
+	private int contentH;
 	private Hit activeSlider;
 
 	public ClickGuiScreen() {
 		super(Component.literal("Nebula"));
 	}
 
-	private static int[] pos(Category c) {
-		return POSITIONS.computeIfAbsent(c, k -> new int[]{24 + k.ordinal() * (PANEL_W + 16), 28});
-	}
-
 	/** Obszar klikalny zapamietany podczas rysowania. */
 	private static final class Hit {
 		final int x, y, w, h;
+		final boolean inList;
 		Runnable onLeft;
 		Runnable onRight;
-		Category dragPanel;
 		NumberSetting slider;
 		int sliderX, sliderW;
 
-		Hit(int x, int y, int w, int h) {
+		Hit(int x, int y, int w, int h, boolean inList) {
 			this.x = x;
 			this.y = y;
 			this.w = w;
 			this.h = h;
+			this.inList = inList;
 		}
 
 		boolean contains(double mx, double my) {
@@ -89,160 +95,78 @@ public final class ClickGuiScreen extends Screen {
 		float dt = Math.min(0.1f, (now - lastFrame) / 1_000_000_000f);
 		lastFrame = now;
 
-		float open = Theme.animations() ? Math.min(1f, (now - openedAt) / 180_000_000f) : 1f;
-		float ease = 1f - (1f - open) * (1f - open) * (1f - open);
+		float open = Theme.animations() ? Math.min(1f, (now - openedAt) / 200_000_000f) : 1f;
+		float a = 1f - (1f - open) * (1f - open) * (1f - open);
 
 		hits.clear();
 
-		// przyciemnione tlo z lekkim akcentem u dolu
 		Gfx.gradient(g, 0, 0, width, height,
-				Gfx.alpha(0xFF05050A, 0.55f * ease),
-				Gfx.alpha(Gfx.lerp(0xFF05050A, Theme.accentDark(), 0.35f), 0.70f * ease));
+				Gfx.alpha(0xFF05050A, 0.50f * a),
+				Gfx.alpha(Gfx.lerp(0xFF05050A, Theme.accentDark(), 0.30f), 0.66f * a));
 
-		for (Category cat : Category.values()) {
-			drawPanel(g, cat, mouseX, mouseY, dt, ease);
+		int winW = Math.min(width - 24, 500);
+		int winH = Math.min(height - 24, 320);
+		int wx = (width - winW) / 2;
+		int wy = (height - winH) / 2 + Math.round((1f - a) * 12f);
+
+		// miekki cien, okno, pasek boczny
+		for (int i = 6; i >= 1; i--) {
+			Gfx.roundRect(g, wx - i, wy - i, winW + i * 2, winH + i * 2, 8 + i, Gfx.alpha(0xFF000000, 0.07f * a));
 		}
+		Gfx.roundRect(g, wx, wy, winW, winH, 8, Gfx.alpha(Theme.PANEL, Math.max(0.94f, Theme.opacity()) * a));
+		Gfx.roundRect(g, wx, wy, SIDEBAR + 8, winH, 8, Gfx.alpha(Theme.HEADER, a));
+		Gfx.rect(g, wx + SIDEBAR, wy, 8, winH, Gfx.alpha(Theme.PANEL, Math.max(0.94f, Theme.opacity()) * a));
+		Gfx.rect(g, wx + SIDEBAR, wy + 8, 1, winH - 16, Gfx.alpha(0xFFFFFFFF, 0.05f * a));
 
-		drawFooter(g, mouseX, mouseY, ease);
+		drawSidebar(g, wx, wy, winH, mouseX, mouseY, a);
+		drawContent(g, wx + SIDEBAR + 14, wy, winW - SIDEBAR - 28, winH, mouseX, mouseY, dt, a);
 	}
 
-	private void drawPanel(GuiGraphicsExtractor g, Category cat, int mx, int my, float dt, float a) {
-		List<Module> modules = NebulaClient.modules().in(cat);
-		if (modules.isEmpty()) return;
+	private void drawSidebar(GuiGraphicsExtractor g, int wx, int wy, int winH, int mx, int my, float a) {
+		// logo
+		Gfx.roundRect(g, wx + 14, wy + 15, 3, 20, 1, Gfx.alpha(Theme.accent(), a));
+		Gfx.text(g, "NEBULA", wx + 23, wy + 15, Gfx.alpha(Theme.TEXT, a), false);
+		Gfx.text(g, "client", wx + 23, wy + 26, Gfx.alpha(Theme.accent(), a), false);
 
-		int[] p = pos(cat);
-		int px = p[0];
-		int py = p[1] + Math.round((1f - a) * -14f);
-		int totalH = panelHeight(modules);
+		Category[] cats = Category.values();
+		int ty = wy + 52;
+		for (int i = 0; i < cats.length; i++) {
+			Category c = cats[i];
+			int count = NebulaClient.modules().in(c).size();
+			boolean selected = query.isEmpty() && i == tab;
+			boolean hover = mx >= wx + 8 && mx < wx + SIDEBAR - 8 && my >= ty && my < ty + 24;
 
-		// cien, korpus, naglowek
-		Gfx.roundRect(g, px - 1, py - 1, PANEL_W + 2, totalH + 3, 6, Gfx.alpha(0xFF000000, 0.35f * a));
-		Gfx.roundRect(g, px, py, PANEL_W, totalH, 5, Gfx.alpha(Theme.PANEL, Theme.opacity() * a));
-		Gfx.roundRect(g, px, py, PANEL_W, HEADER_H, 5, Gfx.alpha(Theme.HEADER, a));
-		Gfx.rect(g, px, py + HEADER_H - 5, PANEL_W, 5, Gfx.alpha(Theme.HEADER, a));
-		Gfx.rect(g, px, py + HEADER_H - 1, PANEL_W, 1, Gfx.alpha(Theme.accent(), a));
-		Gfx.roundRect(g, px + 8, py + 7, 3, 8, 1, Gfx.alpha(Theme.accent(), a));
-		Gfx.text(g, cat.label, px + 16, py + (HEADER_H - Gfx.fontHeight()) / 2, Gfx.alpha(Theme.TEXT, a), false);
-
-		Hit header = new Hit(px, py, PANEL_W, HEADER_H);
-		header.dragPanel = cat;
-		hits.add(header);
-
-		int cy = py + HEADER_H + 3;
-		for (Module m : modules) {
-			cy = drawModule(g, m, px, cy, mx, my, dt, a);
-		}
-	}
-
-	private int drawModule(GuiGraphicsExtractor g, Module m, int px, int cy, int mx, int my, float dt, float a) {
-		boolean hover = mx >= px + 2 && mx < px + PANEL_W - 2 && my >= cy && my < cy + ROW_H;
-		if (hover) {
-			Gfx.roundRect(g, px + 3, cy, PANEL_W - 6, ROW_H, 3, Gfx.alpha(Theme.ROW_HOVER, a));
-		}
-
-		boolean on = m.isEnabled();
-		int nameColor = (!m.isToggleable() || on) ? Theme.TEXT : Theme.MUTED;
-		Gfx.text(g, m.name, px + 10, cy + (ROW_H - Gfx.fontHeight()) / 2, Gfx.alpha(nameColor, a), false);
-
-		boolean hasSettings = !m.settings.isEmpty();
-		boolean expanded = EXPANDED.contains(m);
-
-		if (m.isToggleable()) {
-			float t = toggleAnim.getOrDefault(m, on ? 1f : 0f);
-			float goal = on ? 1f : 0f;
-			t = Theme.animations() ? t + (goal - t) * Math.min(1f, dt * 14f) : goal;
-			toggleAnim.put(m, t);
-
-			int sx = px + PANEL_W - 30;
-			int sy = cy + (ROW_H - 10) / 2;
-			Gfx.roundRect(g, sx, sy, 20, 10, 5, Gfx.alpha(Gfx.lerp(Theme.TRACK, Theme.accent(), t), a));
-			Gfx.roundRect(g, sx + 2 + Math.round(t * 10f), sy + 2, 6, 6, 3, Gfx.alpha(0xFFFFFFFF, a));
-
-			if (hasSettings) {
-				Gfx.text(g, expanded ? "-" : "+", px + PANEL_W - 40, cy + (ROW_H - Gfx.fontHeight()) / 2,
-						Gfx.alpha(Theme.MUTED, a), false);
+			if (selected) {
+				Gfx.roundRect(g, wx + 8, ty, SIDEBAR - 16, 24, 6, Gfx.alpha(Theme.accent(), 0.20f * a));
+				Gfx.roundRect(g, wx + 8, ty + 6, 2, 12, 1, Gfx.alpha(Theme.accent(), a));
+			} else if (hover) {
+				Gfx.roundRect(g, wx + 8, ty, SIDEBAR - 16, 24, 6, Gfx.alpha(Theme.ROW_HOVER, a));
 			}
-		} else if (hasSettings) {
-			Gfx.text(g, expanded ? "-" : "+", px + PANEL_W - 16, cy + (ROW_H - Gfx.fontHeight()) / 2,
-					Gfx.alpha(Theme.MUTED, a), false);
-		}
+			Gfx.text(g, c.label, wx + 18, ty + 8, Gfx.alpha(selected ? Theme.TEXT : Theme.MUTED, a), false);
+			String n = String.valueOf(count);
+			Gfx.text(g, n, wx + SIDEBAR - 14 - Gfx.width(n), ty + 8, Gfx.alpha(Theme.MUTED, 0.7f * a), false);
 
-		Hit row = new Hit(px + 2, cy, PANEL_W - 4, ROW_H);
-		Runnable expand = () -> {
-			if (m.settings.isEmpty()) return;
-			if (!EXPANDED.add(m)) EXPANDED.remove(m);
-		};
-		row.onLeft = m.isToggleable() ? m::toggle : expand;
-		row.onRight = expand;
-		hits.add(row);
-		cy += ROW_H;
-
-		if (expanded && hasSettings) {
-			cy += drawSettings(g, m, px, cy, a);
-		}
-		return cy;
-	}
-
-	private int drawSettings(GuiGraphicsExtractor g, Module m, int px, int cy, float a) {
-		int blockH = settingsHeight(m);
-		Gfx.roundRect(g, px + 4, cy, PANEL_W - 8, blockH, 3, Gfx.alpha(0xFF0B0B12, 0.65f * a));
-
-		int lx = px + 10;
-		int rx = px + PANEL_W - 10;
-		int y = cy + 1;
-		for (Setting s : m.settings) {
-			int sh = settingHeight(s);
-			Hit hit = new Hit(px + 4, y, PANEL_W - 8, sh);
-
-			if (s instanceof BoolSetting b) {
-				Gfx.text(g, b.name, lx, y + 4, Gfx.alpha(Theme.TEXT, a), false);
-				Gfx.roundRect(g, rx - 10, y + 3, 10, 10, 3, Gfx.alpha(b.value ? Theme.accent() : Theme.TRACK, a));
-				hit.onLeft = b::toggle;
-			} else if (s instanceof ModeSetting ms) {
-				Gfx.text(g, ms.name, lx, y + 4, Gfx.alpha(Theme.TEXT, a), false);
-				String v = ms.get();
-				Gfx.text(g, v, rx - Gfx.width(v), y + 4, Gfx.alpha(Theme.accent(), a), false);
-				hit.onLeft = () -> ms.cycle(1);
-				hit.onRight = () -> ms.cycle(-1);
-			} else if (s instanceof NumberSetting ns) {
-				Gfx.text(g, ns.name, lx, y + 3, Gfx.alpha(Theme.TEXT, a), false);
-				String v = ns.format();
-				Gfx.text(g, v, rx - Gfx.width(v), y + 3, Gfx.alpha(Theme.accent(), a), false);
-
-				int bx = lx;
-				int bw = rx - lx;
-				int by = y + 16;
-				int fill = Math.round(bw * (float) ns.fraction());
-				Gfx.roundRect(g, bx, by, bw, 3, 1, Gfx.alpha(Theme.TRACK, a));
-				Gfx.roundRect(g, bx, by, Math.max(2, fill), 3, 1, Gfx.alpha(Theme.accent(), a));
-				Gfx.roundRect(g, bx + fill - 3, by - 2, 6, 7, 3, Gfx.alpha(0xFFFFFFFF, a));
-
-				hit.slider = ns;
-				hit.sliderX = bx;
-				hit.sliderW = bw;
-			}
+			Hit hit = new Hit(wx + 8, ty, SIDEBAR - 16, 24, false);
+			final int index = i;
+			hit.onLeft = () -> {
+				tab = index;
+				query = "";
+				scroll = 0;
+				scrollTarget = 0;
+			};
 			hits.add(hit);
-			y += sh;
+			ty += 27;
 		}
-		return blockH;
-	}
 
-	private void drawFooter(GuiGraphicsExtractor g, int mx, int my, float a) {
-		String hint = "PPM - ustawienia modułu   |   Prawy Shift / ESC - zamknij";
-		Gfx.text(g, hint, (width - Gfx.width(hint)) / 2, height - 44, Gfx.alpha(Theme.MUTED, a), false);
-
+		// przycisk edytora HUD
+		int bx = wx + 10;
+		int bw = SIDEBAR - 20;
+		int by = wy + winH - 34;
+		boolean hover = mx >= bx && mx < bx + bw && my >= by && my < by + 24;
+		Gfx.roundRect(g, bx, by, bw, 24, 6, Gfx.alpha(hover ? Theme.accent() : Theme.accentDark(), 0.95f * a));
 		String label = "Edytor HUD";
-		int bw = Gfx.width(label) + 24;
-		int bh = 18;
-		int bx = (width - bw) / 2;
-		int by = height - 28;
-		boolean hover = mx >= bx && mx < bx + bw && my >= by && my < by + bh;
-
-		Gfx.roundRect(g, bx, by, bw, bh, 4,
-				Gfx.alpha(hover ? Theme.accent() : Theme.accentDark(), 0.9f * a));
-		Gfx.text(g, label, bx + 12, by + (bh - Gfx.fontHeight()) / 2 + 1, Gfx.alpha(Theme.TEXT, a), false);
-
-		Hit hit = new Hit(bx, by, bw, bh);
+		Gfx.text(g, label, bx + (bw - Gfx.width(label)) / 2, by + 8, Gfx.alpha(Theme.TEXT, a), false);
+		Hit hit = new Hit(bx, by, bw, 24, false);
 		hit.onLeft = () -> {
 			ConfigManager.save(NebulaClient.modules());
 			minecraft.gui.setScreen(new HudEditorScreen(this));
@@ -250,25 +174,194 @@ public final class ClickGuiScreen extends Screen {
 		hits.add(hit);
 	}
 
+	private void drawContent(GuiGraphicsExtractor g, int cx, int wy, int cw, int winH,
+							 int mx, int my, float dt, float a) {
+		// wyszukiwarka
+		Gfx.roundRect(g, cx, wy + 10, cw, 22, 6, Gfx.alpha(0xFF12121B, a));
+		boolean caret = (System.currentTimeMillis() / 500) % 2 == 0;
+		if (query.isEmpty()) {
+			Gfx.text(g, "Szukaj modułów...  (PPM = ustawienia)", cx + 10, wy + 17, Gfx.alpha(Theme.MUTED, 0.8f * a), false);
+			String cat = Category.values()[tab].label;
+			Gfx.text(g, cat, cx + cw - 10 - Gfx.width(cat), wy + 17, Gfx.alpha(Theme.accent(), a), false);
+		} else {
+			Gfx.text(g, query + (caret ? "_" : ""), cx + 10, wy + 17, Gfx.alpha(Theme.TEXT, a), false);
+		}
+
+		viewTop = wy + 40;
+		viewBottom = wy + winH - 10;
+		int viewH = viewBottom - viewTop;
+
+		List<Module> modules = visibleModules();
+		int[] heights = new int[modules.size()];
+		contentH = 0;
+		for (int i = 0; i < modules.size(); i++) {
+			Module m = modules.get(i);
+			float goal = EXPANDED.contains(m) && !m.settings.isEmpty() ? 1f : 0f;
+			float f = expandAnim.getOrDefault(m, goal);
+			f = Theme.animations() ? f + (goal - f) * Math.min(1f, dt * 14f) : goal;
+			if (Math.abs(goal - f) < 0.01f) f = goal;
+			expandAnim.put(m, f);
+			float eased = f * f * (3f - 2f * f);
+			heights[i] = CARD_H + Math.round((settingsHeight(m) + 4) * eased);
+			contentH += heights[i] + GAP;
+		}
+
+		scrollTarget = Math.max(0f, Math.min(scrollTarget, Math.max(0, contentH - viewH)));
+		scroll = Theme.animations() ? scroll + (scrollTarget - scroll) * Math.min(1f, dt * 16f) : scrollTarget;
+
+		if (modules.isEmpty()) {
+			String none = "Brak wyników";
+			Gfx.text(g, none, cx + (cw - Gfx.width(none)) / 2, viewTop + 30, Gfx.alpha(Theme.MUTED, a), false);
+			return;
+		}
+
+		int cardW = cw - 8;
+		g.enableScissor(cx - 2, viewTop, cx + cw + 4, viewBottom);
+		int y = viewTop - Math.round(scroll);
+		for (int i = 0; i < modules.size(); i++) {
+			int h = heights[i];
+			if (y + h >= viewTop && y <= viewBottom) {
+				drawCard(g, modules.get(i), cx, y, cardW, h, mx, my, dt, a);
+			}
+			y += h + GAP;
+		}
+		g.disableScissor();
+
+		// pasek przewijania
+		if (contentH > viewH) {
+			float frac = viewH / (float) contentH;
+			int barH = Math.max(18, Math.round(viewH * frac));
+			int barY = viewTop + Math.round((viewH - barH) * (scroll / Math.max(1f, contentH - viewH)));
+			Gfx.roundRect(g, cx + cw - 3, barY, 3, barH, 1, Gfx.alpha(Theme.accent(), 0.7f * a));
+		}
+	}
+
+	private void drawCard(GuiGraphicsExtractor g, Module m, int x, int y, int w, int total,
+						  int mx, int my, float dt, float a) {
+		boolean inView = my >= viewTop && my < viewBottom;
+		boolean hover = inView && mx >= x && mx < x + w && my >= y && my < y + CARD_H;
+		boolean on = m.isEnabled();
+		boolean hasSettings = !m.settings.isEmpty();
+		boolean expanded = EXPANDED.contains(m);
+
+		Gfx.roundRect(g, x, y, w, total, 6, Gfx.alpha(hover ? CARD_HOVER : CARD, a));
+		if (on && m.isToggleable()) {
+			Gfx.roundRect(g, x, y + 7, 2, CARD_H - 14, 1, Gfx.alpha(Theme.accent(), a));
+		}
+
+		boolean lit = !m.isToggleable() || on;
+		Gfx.text(g, m.name, x + 12, y + 7, Gfx.alpha(lit ? Theme.TEXT : Theme.MUTED, a), false);
+		Gfx.text(g, fit(m.description, w - 12 - 74), x + 12, y + 19, Gfx.alpha(Theme.MUTED, 0.85f * a), false);
+
+		if (m.isToggleable()) {
+			float t = toggleAnim.getOrDefault(m, on ? 1f : 0f);
+			float goal = on ? 1f : 0f;
+			t = Theme.animations() ? t + (goal - t) * Math.min(1f, dt * 14f) : goal;
+			toggleAnim.put(m, t);
+
+			int sx = x + w - 44;
+			int sy = y + 9;
+			Gfx.roundRect(g, sx, sy, 32, 16, 8, Gfx.alpha(Gfx.lerp(Theme.TRACK, Theme.accent(), t), a));
+			Gfx.roundRect(g, sx + 2 + Math.round(t * 16f), sy + 2, 12, 12, 6, Gfx.alpha(0xFFFFFFFF, a));
+		}
+		if (hasSettings) {
+			String arrow = expanded ? "v" : ">";
+			int ax = x + w - (m.isToggleable() ? 62 : 22);
+			Gfx.text(g, arrow, ax, y + 13, Gfx.alpha(expanded ? Theme.accent() : Theme.MUTED, a), false);
+		}
+
+		Runnable expand = () -> {
+			if (m.settings.isEmpty()) return;
+			if (!EXPANDED.add(m)) EXPANDED.remove(m);
+		};
+		Hit row = new Hit(x, y, w, CARD_H, true);
+		row.onLeft = m.isToggleable() ? m::toggle : expand;
+		row.onRight = expand;
+		hits.add(row);
+		if (hasSettings) {
+			Hit arrowHit = new Hit(x + w - (m.isToggleable() ? 70 : 30), y, 24, CARD_H, true);
+			arrowHit.onLeft = expand;
+			arrowHit.onRight = expand;
+			hits.add(arrowHit);
+		}
+
+		if (total > CARD_H + 2 && hasSettings) {
+			g.enableScissor(x, Math.max(viewTop, y + CARD_H), x + w, Math.min(viewBottom, y + total));
+			drawSettings(g, m, x, y + CARD_H, w, a);
+			g.disableScissor();
+		}
+	}
+
+	private void drawSettings(GuiGraphicsExtractor g, Module m, int x, int y, int w, float a) {
+		Gfx.roundRect(g, x + 6, y, w - 12, settingsHeight(m) + 2, 5, Gfx.alpha(SETTINGS_BG, a));
+		int lx = x + 16;
+		int rx = x + w - 16;
+		int cy = y + 2;
+		for (Setting s : m.settings) {
+			int sh = settingHeight(s);
+			Hit hit = new Hit(x + 6, cy, w - 12, sh, true);
+
+			if (s instanceof BoolSetting b) {
+				Gfx.text(g, b.name, lx, cy + 7, Gfx.alpha(Theme.TEXT, a), false);
+				Gfx.roundRect(g, rx - 22, cy + 5, 22, 12, 6, Gfx.alpha(b.value ? Theme.accent() : Theme.TRACK, a));
+				Gfx.roundRect(g, rx - 20 + (b.value ? 10 : 0), cy + 7, 8, 8, 4, Gfx.alpha(0xFFFFFFFF, a));
+				hit.onLeft = b::toggle;
+			} else if (s instanceof ModeSetting ms) {
+				Gfx.text(g, ms.name, lx, cy + 7, Gfx.alpha(Theme.TEXT, a), false);
+				String v = "< " + ms.get() + " >";
+				Gfx.text(g, v, rx - Gfx.width(v), cy + 7, Gfx.alpha(Theme.accent(), a), false);
+				hit.onLeft = () -> ms.cycle(1);
+				hit.onRight = () -> ms.cycle(-1);
+			} else if (s instanceof NumberSetting ns) {
+				Gfx.text(g, ns.name, lx, cy + 5, Gfx.alpha(Theme.TEXT, a), false);
+				String v = ns.format();
+				Gfx.text(g, v, rx - Gfx.width(v), cy + 5, Gfx.alpha(Theme.accent(), a), false);
+				int bw = rx - lx;
+				int by = cy + 20;
+				int fill = Math.round(bw * (float) ns.fraction());
+				Gfx.roundRect(g, lx, by, bw, 4, 2, Gfx.alpha(Theme.TRACK, a));
+				Gfx.roundRect(g, lx, by, Math.max(3, fill), 4, 2, Gfx.alpha(Theme.accent(), a));
+				Gfx.roundRect(g, lx + fill - 4, by - 2, 8, 8, 4, Gfx.alpha(0xFFFFFFFF, a));
+				hit.slider = ns;
+				hit.sliderX = lx;
+				hit.sliderW = bw;
+			}
+			hits.add(hit);
+			cy += sh;
+		}
+	}
+
 	// ---------------------------------------------------------------- uklad
 
-	private int panelHeight(List<Module> modules) {
-		int h = HEADER_H + 3;
-		for (Module m : modules) {
-			h += ROW_H;
-			if (EXPANDED.contains(m) && !m.settings.isEmpty()) h += settingsHeight(m);
+	private List<Module> visibleModules() {
+		if (query.isEmpty()) {
+			return NebulaClient.modules().in(Category.values()[tab]);
 		}
-		return h + 3;
+		String q = query.toLowerCase(Locale.ROOT);
+		List<Module> out = new ArrayList<>();
+		for (Module m : NebulaClient.modules().all()) {
+			if (m.name.toLowerCase(Locale.ROOT).contains(q) || m.description.toLowerCase(Locale.ROOT).contains(q)) {
+				out.add(m);
+			}
+		}
+		return out;
+	}
+
+	private static String fit(String s, int maxW) {
+		if (Gfx.width(s) <= maxW) return s;
+		String dots = "...";
+		while (s.length() > 1 && Gfx.width(s + dots) > maxW) s = s.substring(0, s.length() - 1);
+		return s + dots;
 	}
 
 	private static int settingsHeight(Module m) {
-		int h = 2;
+		int h = 4;
 		for (Setting s : m.settings) h += settingHeight(s);
 		return h;
 	}
 
 	private static int settingHeight(Setting s) {
-		return s instanceof NumberSetting ? 26 : 16;
+		return s instanceof NumberSetting ? 32 : 22;
 	}
 
 	// ---------------------------------------------------------------- wejscie
@@ -282,14 +375,8 @@ public final class ClickGuiScreen extends Screen {
 		for (int i = hits.size() - 1; i >= 0; i--) {
 			Hit hit = hits.get(i);
 			if (!hit.contains(mx, my)) continue;
+			if (hit.inList && (my < viewTop || my >= viewBottom)) continue;
 
-			if (hit.dragPanel != null && button == 0) {
-				int[] p = pos(hit.dragPanel);
-				draggingPanel = hit.dragPanel;
-				dragOffX = (int) mx - p[0];
-				dragOffY = (int) my - p[1];
-				return true;
-			}
 			if (hit.slider != null && button == 0) {
 				activeSlider = hit;
 				updateSlider(mx);
@@ -307,12 +394,6 @@ public final class ClickGuiScreen extends Screen {
 
 	@Override
 	public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
-		if (draggingPanel != null) {
-			int[] p = pos(draggingPanel);
-			p[0] = Math.max(0, Math.min(width - PANEL_W, (int) event.x() - dragOffX));
-			p[1] = Math.max(0, Math.min(height - HEADER_H, (int) event.y() - dragOffY));
-			return true;
-		}
 		if (activeSlider != null) {
 			updateSlider(event.x());
 			return true;
@@ -322,11 +403,17 @@ public final class ClickGuiScreen extends Screen {
 
 	@Override
 	public boolean mouseReleased(MouseButtonEvent event) {
-		boolean changed = draggingPanel != null || activeSlider != null;
-		draggingPanel = null;
+		boolean changed = activeSlider != null;
 		activeSlider = null;
 		if (changed) ConfigManager.save(NebulaClient.modules());
 		return changed || super.mouseReleased(event);
+	}
+
+	@Override
+	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+		scrollTarget -= (float) scrollY * 34f;
+		scrollTarget = Math.max(0f, Math.min(scrollTarget, Math.max(0, contentH - (viewBottom - viewTop))));
+		return true;
 	}
 
 	private void updateSlider(double mouseX) {
@@ -337,9 +424,26 @@ public final class ClickGuiScreen extends Screen {
 	}
 
 	@Override
+	public boolean charTyped(CharacterEvent event) {
+		if (event.isAllowedChatCharacter() && query.length() < 24) {
+			query += event.codepointAsString();
+			scroll = 0;
+			scrollTarget = 0;
+			return true;
+		}
+		return super.charTyped(event);
+	}
+
+	@Override
 	public boolean keyPressed(KeyEvent event) {
 		if (event.key() == InputConstants.KEY_RSHIFT) {
 			onClose();
+			return true;
+		}
+		if (event.key() == InputConstants.KEY_BACKSPACE && !query.isEmpty()) {
+			query = query.substring(0, query.length() - 1);
+			scroll = 0;
+			scrollTarget = 0;
 			return true;
 		}
 		return super.keyPressed(event);
