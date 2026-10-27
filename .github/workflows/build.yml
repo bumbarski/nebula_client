@@ -41,15 +41,11 @@ jobs:
         run: |
           JAR=$(find ~/.gradle/caches/fabric-loom -name 'minecraft-client.jar' | head -1)
           sig() { javap -p -cp "$JAR" "$1" 2>&1 | grep -E "$2" | grep -v lambda | sed 's/net\.minecraft\.//g' | head -${3:-40}; }
-          { echo "--- Options gamma"; sig net.minecraft.client.Options 'gamma' 5;
-            echo "--- OptionInstance"; sig net.minecraft.client.OptionInstance 'get\(|set\(|public|protected' 25;
-            echo "--- ItemCooldowns"; sig net.minecraft.world.item.ItemCooldowns 'public' 15;
-            echo "--- Player cooldowns"; sig net.minecraft.world.entity.player.Player 'ooldown' 5; } > d1.txt
-          { echo "--- ItemInHandRenderer"; sig net.minecraft.client.renderer.ItemInHandRenderer 'void |float ' 30;
-            echo "--- Lightmap"; for c in net.minecraft.client.renderer.LightTexture net.minecraft.client.renderer.Lightmap net.minecraft.client.renderer.state.LightmapRenderState; do sig $c 'amma|ightness|ightNight|ightmap' 8; done; } > d2.txt
-          { echo "--- LevelRenderer outline"; sig net.minecraft.client.renderer.LevelRenderer 'utline|Outline' 15;
-            echo "--- ShapeRenderer"; sig net.minecraft.client.renderer.ShapeRenderer '.*' 12;
-            echo "--- BlockOutlineRenderState"; sig net.minecraft.client.renderer.state.BlockOutlineRenderState '.*' 10; } > d3.txt
+          body() { javap -p -c -cp "$JAR" "$1" 2>&1 | awk -v m="$2" 'index($0,m){f=1} f{print} f&&/^$/{exit}' | grep -E 'invoke|ldc|getfield|putfield|getstatic' | sed 's/^ *[0-9]*: //; s/net\/minecraft\///g' | head -${3:-40}; }
+          { echo "--- ItemInHandRenderer metody"; javap -p -cp "$JAR" net.minecraft.client.renderer.ItemInHandRenderer 2>&1 | grep -E '\(' | grep -v lambda | sed 's/net\.minecraft\.//g' | head -30; } > d1.txt
+          { echo "--- LevelRenderer.submitHitOutline"; body net.minecraft.client.renderer.LevelRenderer 'private void submitHitOutline' 40;
+            echo "--- BlockOutlineRenderState"; javap -p -cp "$JAR" net.minecraft.client.renderer.state.level.BlockOutlineRenderState 2>&1 | sed 's/net\.minecraft\.//g' | head -20; } > d2.txt
+          { echo "--- LevelRenderer.submitBlockOutline"; body net.minecraft.client.renderer.LevelRenderer 'private void submitBlockOutline' 40; } > d3.txt
           for n in 1 2 3; do node ../launcher/test/annotate.js d$n.txt "Diag $n" notice 6500; done
 
       - name: Przygotuj jar do wydania
