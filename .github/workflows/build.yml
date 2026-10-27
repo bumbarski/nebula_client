@@ -37,6 +37,16 @@ jobs:
         if: failure()
         run: node ../launcher/test/annotate.js build.log "Log builda moda" error 7000
 
+      - name: Diagnostyka API (tymczasowa)
+        if: always()
+        run: |
+          JAR=$(find ~/.gradle/caches/fabric-loom -name 'minecraft-client.jar' | head -1)
+          sig() { javap -p -cp "$JAR" "$1" 2>&1 | grep -E "$2" | grep -v lambda | sed 's/net\.minecraft\.//g' | head -${3:-40}; }
+          { echo "--- GuiGraphicsExtractor"; sig net.minecraft.client.gui.GuiGraphicsExtractor 'cissor|pose|Pose|centeredText|textWithWordWrap' 12;
+            echo "--- Screen"; sig net.minecraft.client.gui.screens.Screen 'charTyped|mouseScrolled|keyPressed|onClose|isPauseScreen|renderBackground|extractBackground|extractTransparent|extractBlur' 14;
+            echo "--- CharacterEvent"; javap -p -cp "$JAR" net.minecraft.client.input.CharacterEvent 2>&1 | sed 's/net\.minecraft\.//g' | head -8; } > d1.txt
+          node ../launcher/test/annotate.js d1.txt "Diag 1" notice 6500
+
       - name: Przygotuj jar do wydania
         run: |
           mkdir -p ../dist-mod
