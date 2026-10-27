@@ -337,6 +337,16 @@ test('device flow: kod, oczekiwanie, slow_down, sukces; brak Client ID', async (
 });
 
 // ---------- konta i ustawienia
+test('msError: błędy konfiguracji Azure dostają polską podpowiedź', () => {
+  const unknownApp = auth.msError({ error_description: "AADSTS700016: Application with identifier 'x' was not found in the directory.\r\nTrace ID: 1" });
+  assert.match(unknownApp, /AADSTS700016/);
+  assert.match(unknownApp, /Personal Microsoft accounts/);
+  assert.doesNotMatch(unknownApp, /Trace ID/, 'bez szumu z Trace ID');
+  assert.match(auth.msError({ error_description: 'AADSTS7000218: The request body must contain client_assertion' }), /Allow public client flows/);
+  assert.equal(auth.msError({ error: 'authorization_pending' }), 'authorization_pending', 'inne błędy bez zmian');
+  assert.match(auth.msError(null), /nieznany błąd/);
+});
+
 test('AccountStore: dodawanie, wybór, usuwanie; tokeny nie wychodzą w list()', async () => {
   const dir = tmp();
   const store = new AccountStore(path.join(dir, 'accounts.json'), makeCrypt(null));

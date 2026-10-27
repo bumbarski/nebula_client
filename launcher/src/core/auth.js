@@ -9,9 +9,29 @@ const MS = 'https://login.microsoftonline.com/consumers/oauth2/v2.0';
 
 class AuthError extends Error {}
 
+// Najczęstsze błędy konfiguracji aplikacji w Azure, wyjaśnione po ludzku.
+const HINTS = [
+  [
+    /AADSTS700016/,
+    'Microsoft nie znajduje aplikacji o tym Client ID dla kont osobistych. W Azure (App registrations → Authentication) ' +
+      'ustaw „Supported account types” na „Personal Microsoft accounts” (albo „any org directory and personal Microsoft accounts”) ' +
+      'i sprawdź, czy Client ID jest skopiowany dokładnie ze strony Overview tej aplikacji.',
+  ],
+  [
+    /AADSTS7000218|AADSTS70002\b/,
+    'W Azure włącz „Allow public client flows” (App registrations → Authentication → Advanced settings) i zapisz.',
+  ],
+  [
+    /AADSTS900144/,
+    'Client ID jest pusty albo uszkodzony. Wklej go jeszcze raz w zakładce Konta.',
+  ],
+];
+
 function msError(data) {
   const d = data || {};
-  return d.error_description || d.error || 'nieznany błąd logowania Microsoft';
+  const text = d.error_description || d.error || 'nieznany błąd logowania Microsoft';
+  const hint = HINTS.find(([re]) => re.test(text));
+  return hint ? `${text.split('\r\n')[0]} → ${hint[1]}` : text;
 }
 
 function requireClientId(clientId) {
@@ -140,4 +160,4 @@ async function minecraftLogin(msAccessToken) {
   return { uuid: profile.id, name: profile.name, accessToken: mc.data.access_token, expiresIn: mc.data.expires_in };
 }
 
-module.exports = { AuthError, startDeviceFlow, pollDeviceFlow, refresh, minecraftLogin };
+module.exports = { msError, AuthError, startDeviceFlow, pollDeviceFlow, refresh, minecraftLogin };

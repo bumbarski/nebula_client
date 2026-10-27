@@ -37,20 +37,6 @@ jobs:
         if: failure()
         run: node ../launcher/test/annotate.js build.log "Log builda moda" error 7000
 
-      - name: TYMCZASOWA diagnostyka API Minecrafta
-        if: always()
-        run: |
-          JAR=$(find ~/.gradle/caches/fabric-loom -name 'minecraft-client.jar' | head -1)
-          sig() { javap -p -cp "$JAR" "$1" 2>&1 | grep -E "$2" | grep -v lambda | sed 's/net\.minecraft\.//g' | head -${3:-40}; }
-          body() { javap -p -c -cp "$JAR" "$1" 2>&1 | awk -v m="$2" 'index($0,m){f=1} f{print} f&&/^$/{exit}' | grep -E 'invoke|ldc|getfield|putfield|getstatic' | sed 's/^ *[0-9]*: //; s/net\/minecraft\///g' | head -${3:-40}; }
-          { echo "--- Camera.alignWithEntity"; body net.minecraft.client.Camera 'private void alignWithEntity' 45; } > d1.txt
-          { echo "--- Entity.turn"; body net.minecraft.world.entity.Entity 'public void turn(double, double)' 30;
-            echo "--- MouseHandler.turnPlayer"; body net.minecraft.client.MouseHandler 'private void turnPlayer' 30; } > d2.txt
-          { echo "--- Options: toggle/klawisze"; sig net.minecraft.client.Options 'toggle|Toggle|keySprint|keyShift|keyUp' 20;
-            echo "--- KeyMapping"; sig net.minecraft.client.KeyMapping 'setDown|isDown|consumeClick' 10;
-            echo "--- InputConstants"; sig com.mojang.blaze3d.platform.InputConstants 'KEY_LALT|KEY_LCONTROL|KEY_RALT' 5; } > d3.txt
-          for n in 1 2 3; do node ../launcher/test/annotate.js d$n.txt "Diag $n" notice 6500; done
-
       - name: Przygotuj jar do wydania
         run: |
           mkdir -p ../dist-mod
