@@ -50,7 +50,7 @@ for dp, _, files in os.walk(os.path.join(DST, 'src', 'main', 'java')):
             (r'super\.keyPressed\(event\)', 'super.keyPressed(keyCode, scanCode, modifiers)'),
             (r'event\.key\(\)', 'keyCode'),
             (r'charTyped\(CharacterEvent event\)', 'charTyped(char chr, int mods)'),
-            (r'event\.isAllowedChatCharacter\(\)', 'net.minecraft.SharedConstants.isAllowedChatCharacter(chr)'),
+            (r'event\.isAllowedChatCharacter\(\)', 'net.minecraft.util.StringUtil.isAllowedChatCharacter(chr)'),
             (r'event\.codepointAsString\(\)', 'String.valueOf(chr)'),
             (r'super\.charTyped\(event\)', 'super.charTyped(chr, mods)'),
             # klawisze
