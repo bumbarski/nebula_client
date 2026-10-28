@@ -41,9 +41,9 @@ async function installMods(gameDir, inst, onProgress = () => {}) {
 
   if (inst.nebula) {
     try {
-      const a = await nebula.latestAsset();
+      const a = await nebula.latestAsset(inst.mcVersion);
       if (a) wanted.push({ filename: a.name, url: a.url, size: a.size, slug: 'nebula-client' });
-      else warnings.push('Nebula Client: nie ma jeszcze wydania na GitHubie, pominięto');
+      else warnings.push('Nebula Client: nie ma jeszcze wersji dla Minecrafta ' + inst.mcVersion + ', pominięto');
     } catch (e) {
       warnings.push(`Nebula Client: ${e.message}`);
     }

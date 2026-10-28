@@ -95,7 +95,7 @@ async function main() {
   });
 
   await step('wydanie Nebula Client na GitHubie', async () => {
-    const a = await nebula.latestAsset();
+    const a = await nebula.latestAsset(MC);
     if (!a) throw new Error('brak wydania z plikiem nebula-client-*.jar (jeszcze nie opublikowane?)');
     return `${a.name} (${a.size} B, tag ${a.tag})`;
   }, { fatal: false });

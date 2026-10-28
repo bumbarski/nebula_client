@@ -169,6 +169,10 @@ test('modrinth.pickVersion i nebula.pickAsset', () => {
   const a = nebula.pickAsset([{ name: 'nebula-client-0.1.0-sources.jar' }, { name: 'nebula-client-0.1.0.jar' }]);
   assert.equal(a.name, 'nebula-client-0.1.0.jar');
   assert.equal(nebula.pickAsset([{ name: 'inny.jar' }]), null);
+  const multi = [{ name: 'nebula-client-0.1.0-mc26.2.jar' }, { name: 'nebula-client-0.1.0-mc26.1.2.jar' }];
+  assert.equal(nebula.pickAsset(multi, '26.1.2').name, 'nebula-client-0.1.0-mc26.1.2.jar');
+  assert.equal(nebula.pickAsset(multi, '26.2').name, 'nebula-client-0.1.0-mc26.2.jar');
+  assert.equal(nebula.pickAsset(multi, '1.21.4'), null);
 });
 
 test('modrinth.resolve: wersje, zależności wymagane, brakujący mod daje ostrzeżenie', async () => {
