@@ -35,6 +35,12 @@ tasks.withType(JavaCompile).configureEach {
 	it.options.encoding = 'UTF-8'
 }
 
+sourceSets {
+	main {
+		java.srcDir "src/compat/${project.compat}/java"
+	}
+}
+
 java {
 	withSourcesJar()
 	sourceCompatibility = JavaVersion.VERSION_25

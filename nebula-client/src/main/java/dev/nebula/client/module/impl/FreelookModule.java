@@ -41,12 +41,12 @@ public final class FreelookModule extends Module {
 			while (key.consumeClick()) {
 				// zuzyj klikniecia, zeby nie zostaly na pozniej
 			}
-			if (mc.gui.screen() != null) down = false;
+			if (dev.nebula.client.Compat.screen(mc) != null) down = false;
 			set(mc, down);
 		} else {
 			boolean pressed = false;
 			while (key.consumeClick()) pressed = !pressed;
-			if (mc.gui.screen() != null) pressed = false;
+			if (dev.nebula.client.Compat.screen(mc) != null) pressed = false;
 			if (pressed) set(mc, !active);
 		}
 	}

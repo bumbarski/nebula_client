@@ -120,6 +120,6 @@ public final class HudEditorScreen extends Screen {
 	@Override
 	public void onClose() {
 		ConfigManager.save(NebulaClient.modules());
-		minecraft.gui.setScreen(parent);
+		dev.nebula.client.Compat.setScreen(minecraft, parent);
 	}
 }

@@ -23,9 +23,11 @@ jobs:
           - mc: "26.2"
             api: "0.152.2+26.2"
             dep: ">=26.2"
+            compat: gui
           - mc: "26.1.2"
             api: "0.155.3+26.1.2"
             dep: "~26.1"
+            compat: classic
     defaults:
       run:
         working-directory: nebula-client
@@ -42,7 +44,7 @@ jobs:
           gradle-version: 9.5.1
 
       - name: Build
-        run: gradle build --console=plain --stacktrace -Pminecraft_version=${{ matrix.mc }} -Pfabric_api_version="${{ matrix.api }}" "-Pminecraft_dep=${{ matrix.dep }}" -Pmod_version=0.1.0-mc${{ matrix.mc }} > build.log 2>&1
+        run: gradle build --console=plain --stacktrace -Pminecraft_version=${{ matrix.mc }} -Pfabric_api_version="${{ matrix.api }}" "-Pminecraft_dep=${{ matrix.dep }}" -Pcompat=${{ matrix.compat }} -Pmod_version=0.1.0-mc${{ matrix.mc }} > build.log 2>&1
 
       - name: Pokaż błędy builda
         if: failure()
