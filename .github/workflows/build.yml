@@ -52,17 +52,6 @@ jobs:
           grep -nE "error:|FAILED|What went wrong|Caused by|Could not|not found|Unsupported" -A3 build.log | head -c 3500 > err.txt || true
           node ../launcher/test/annotate.js err.txt "Błędy builda ${{ matrix.mc }}" error 3600
 
-      - name: Sonda mixinow (tymczasowa)
-        if: always()
-        run: |
-          JAR=$(find ~/.gradle/caches/fabric-loom -name 'minecraft-client.jar' | head -1)
-          sig() { javap -p -cp "$JAR" "$1" 2>&1 | grep -E "$2" | grep -v lambda | sed 's/net\.minecraft\.//g' | head -${3:-10}; }
-          {
-            sig net.minecraft.client.renderer.LevelRenderer 'HitOutline|BlockOutline|Outline'
-            sig net.minecraft.client.renderer.ItemInHandRenderer 'ArmWithItem|void render'
-          } > m.txt
-          node ../launcher/test/annotate.js m.txt "Sygnatury ${{ matrix.mc }}" notice 3000
-
       - name: Przygotuj jar do wydania
         run: |
           mkdir -p ../dist-mod

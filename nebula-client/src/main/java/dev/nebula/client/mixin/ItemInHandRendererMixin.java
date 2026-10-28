@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ItemInHandRenderer.class)
 public abstract class ItemInHandRendererMixin {
-	@Inject(method = "submitArmWithItem", at = @At("HEAD"))
+	@Inject(method = {"submitArmWithItem", "renderArmWithItem"}, at = @At("HEAD"))
 	private void nebula$before(AbstractClientPlayer player, float a, float b, InteractionHand hand, float c,
 							   ItemStack stack, float d, PoseStack pose, SubmitNodeCollector collector, int light,
 							   CallbackInfo ci) {
@@ -33,7 +33,7 @@ public abstract class ItemInHandRendererMixin {
 		pose.mulPose(Axis.ZP.rotationDegrees(m.rotZ.getFloat() * side));
 	}
 
-	@Inject(method = "submitArmWithItem", at = @At("RETURN"))
+	@Inject(method = {"submitArmWithItem", "renderArmWithItem"}, at = @At("RETURN"))
 	private void nebula$after(AbstractClientPlayer player, float a, float b, InteractionHand hand, float c,
 							  ItemStack stack, float d, PoseStack pose, SubmitNodeCollector collector, int light,
 							  CallbackInfo ci) {
