@@ -67,15 +67,6 @@ jobs:
           grep -nE "error:|FAILED|What went wrong|Caused by|Could not|not found|Unsupported" -A3 build.log | head -c 3500 > err.txt || true
           node ../launcher/test/annotate.js err.txt "Błędy builda ${{ matrix.mc }}" error 3600
 
-      - name: Sonda 1.21.4 (tymczasowa)
-        if: always() && matrix.dir == 'nebula-client-1214'
-        run: |
-          find ~/.gradle /home/runner/work -name '*.jar' 2>/dev/null | grep -E '1\.21\.4' | grep -iE 'minecraft' | head -8 > j.txt
-          JAR=$(grep '/minecraft-merged/' j.txt | head -1); [ -z "$JAR" ] && JAR=$(head -1 j.txt)
-          { echo "JAR: $JAR"; for spec in "net.minecraft.client.renderer.LevelRenderer:HitOutline" "net.minecraft.client.renderer.ItemInHandRenderer:renderArmWithItem" "net.minecraft.client.Camera:setRotation" "net.minecraft.world.entity.Entity:void turn"; do javap -p -cp "$JAR" "${spec%%:*}" 2>&1 | grep -E "${spec##*:}" | sed 's/net\.minecraft\.//g'; done; } > m.txt
-          cat j.txt >> m.txt
-          node ../launcher/test/annotate.js m.txt "Sonda 1.21.4" notice 3500
-
       - name: Przygotuj jar do wydania
         run: |
           mkdir -p ../dist-mod

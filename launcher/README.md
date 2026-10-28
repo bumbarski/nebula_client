@@ -15,6 +15,10 @@ Ten sam plik budują się automatycznie przy każdej zmianie w repo (zakładka A
 3. **Instalacje** → zmiana wersji Minecrafta, pamięci RAM (np. 8 GB), listy modów, ścieżki Javy i argumentów JVM.
 4. **Ustawienia** → motyw i domyślna pamięć dla nowych instalacji.
 
+### Wersje Minecrafta
+
+Nebula Client jest budowana dla **26.2**, **26.1.2** i **1.21.4**. Launcher sam pobiera jar pasujący do wersji gry wybranej w instalacji (dla innych wersji Nebula jest pomijana z ostrzeżeniem).
+
 ### Paczka modów
 
 Domyślna instalacja „Nebula (26.2)” ma: **Fabric API**, **Sodium**, **Lithium**, **FerriteCore**, **In-Game Account Switcher** i **Nebula Client** (menu pod Prawym Shiftem). Opcjonalnie: ImmediatelyFast, Entity Culling. Mody są pobierane z Modrinth w najnowszej wersji zgodnej z wybraną wersją gry, a launcher zmienia tylko pliki, które sam dodał, więc Twoje własne mody w folderze `mods` zostają. Mod, który nie ma jeszcze wersji na dany Minecraft, jest pomijany z ostrzeżeniem (przy 26.2 brakuje ModernFix).
