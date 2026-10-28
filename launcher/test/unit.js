@@ -254,7 +254,7 @@ test('installMods: pobiera mody i Nebulę, sprząta tylko swoje stare pliki', as
       if (url.includes('/project/sodium/version')) return json(200, mod('P1', 'sodium-1.jar', sodium, base + '/sodium.jar'));
       if (url.includes('/project/fabric-api/version')) return json(200, mod('P2', 'fabric-api-1.jar', fapi, base + '/fapi.jar'));
       if (url.includes('/releases/latest')) {
-        return json(200, { tag_name: 'build-1', assets: [{ name: 'nebula-client-0.1.0.jar', browser_download_url: base + '/neb.jar', size: neb.length }] });
+        return json(200, { tag_name: 'build-1', assets: [{ name: 'nebula-client-0.1.0-mc26.2.jar', browser_download_url: base + '/neb.jar', size: neb.length }] });
       }
       throw new Error('niespodziewane: ' + url);
     };
@@ -267,7 +267,7 @@ test('installMods: pobiera mody i Nebulę, sprząta tylko swoje stare pliki', as
     const inst = { mcVersion: '26.2', fabric: true, nebula: true, mods: ['sodium'] };
     const r = await mods.installMods(game, inst);
     const files = fs.readdirSync(path.join(game, 'mods')).filter((f) => f.endsWith('.jar')).sort();
-    assert.deepEqual(files, ['fabric-api-1.jar', 'moj-wlasny-mod.jar', 'nebula-client-0.1.0.jar', 'sodium-1.jar']);
+    assert.deepEqual(files, ['fabric-api-1.jar', 'moj-wlasny-mod.jar', 'nebula-client-0.1.0-mc26.2.jar', 'sodium-1.jar']);
     assert.deepEqual(r.warnings, []);
 
     // bez Fabrica: nie dociągamy modów Fabrica, a stare pliki zarządzane znikają
