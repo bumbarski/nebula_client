@@ -24,20 +24,35 @@ jobs:
             api: "0.152.2+26.2"
             dep: ">=26.2"
             compat: gui
+            dir: nebula-client
+            java: 25
           - mc: "26.1.2"
             api: "0.155.3+26.1.2"
             dep: "~26.1"
             compat: classic
+            dir: nebula-client
+            java: 25
+          - mc: "1.21.4"
+            api: "0.119.4+1.21.4"
+            dep: "~1.21.4"
+            compat: classic
+            dir: nebula-client-1214
+            java: 21
     defaults:
       run:
-        working-directory: nebula-client
+        working-directory: ${{ matrix.dir }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Wygeneruj projekt dla 1.21.4
+        if: matrix.dir == 'nebula-client-1214'
+        working-directory: .
+        run: python3 tools/port_1214.py
 
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 25
+          java-version: ${{ matrix.java }}
 
       - uses: gradle/actions/setup-gradle@v4
         with:
