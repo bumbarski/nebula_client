@@ -62,6 +62,21 @@ jobs:
           fail_on_unmatched_files: true
           files: dist-mod/nebula-client-*.jar
 
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wersje Fabric API
+        run: |
+          curl -s https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml | grep -oE '<version>[^<]*(26\.1|1\.21\.4)[^<]*</version>' | sed 's/<[^>]*>//g' | tail -12 > p.txt
+          echo "--- loader" >> p.txt
+          curl -s https://meta.fabricmc.net/v2/versions/loader | python3 -c "import json,sys; print([x['version'] for x in json.load(sys.stdin)][:4])" >> p.txt
+          echo "--- loom" >> p.txt
+          curl -s https://maven.fabricmc.net/net/fabricmc/fabric-loom/net.fabricmc.fabric-loom.gradle.plugin/maven-metadata.xml | grep -oE '<version>[^<]*</version>' | sed 's/<[^>]*>//g' | tail -4 >> p.txt
+          echo "--- yarn/mc" >> p.txt
+          curl -s "https://meta.fabricmc.net/v2/versions/game" | python3 -c "import json,sys; print([x['version'] for x in json.load(sys.stdin) if x['version'] in ('26.1.2','1.21.4','26.2')])" >> p.txt
+          node launcher/test/annotate.js p.txt "Probe" notice 4000
+
   # 2. Launcher (.exe) budowany na Windows i dołączany do tego samego wydania.
   launcher:
     needs: mod
