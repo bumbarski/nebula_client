@@ -52,6 +52,24 @@ jobs:
           grep -nE "error:|FAILED|What went wrong|Caused by|Could not|not found|Unsupported" -A3 build.log | head -c 3500 > err.txt || true
           node ../launcher/test/annotate.js err.txt "Błędy builda ${{ matrix.mc }}" error 3600
 
+      - name: Sonda mixinow (tymczasowa)
+        if: always()
+        run: |
+          JAR=$(find ~/.gradle/caches/fabric-loom -name 'minecraft-client.jar' | head -1)
+          has() { javap -p -cp "$JAR" "$1" 2>&1 | grep -qE "$2" && echo "OK   $1 $2" || echo "BRAK $1 $2"; }
+          {
+            has net.minecraft.client.Camera 'void setRotation\(float, float\)'
+            has net.minecraft.world.entity.Entity 'void turn\(double, double\)'
+            has net.minecraft.client.renderer.LevelRenderer 'void submitHitOutline'
+            has net.minecraft.client.renderer.LevelRenderer 'renderHitOutline'
+            has net.minecraft.client.renderer.ItemInHandRenderer 'void submitArmWithItem'
+            has net.minecraft.client.renderer.ItemInHandRenderer 'void renderArmWithItem'
+            has net.minecraft.client.OptionInstance 'T get\(\)'
+            has net.minecraft.client.gui.GuiGraphicsExtractor 'enableScissor'
+            has net.minecraft.client.gui.GuiGraphics 'enableScissor'
+          } > m.txt
+          node ../launcher/test/annotate.js m.txt "Sonda ${{ matrix.mc }}" notice 2000
+
       - name: Przygotuj jar do wydania
         run: |
           mkdir -p ../dist-mod
