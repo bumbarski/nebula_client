@@ -56,19 +56,12 @@ jobs:
         if: always()
         run: |
           JAR=$(find ~/.gradle/caches/fabric-loom -name 'minecraft-client.jar' | head -1)
-          has() { javap -p -cp "$JAR" "$1" 2>&1 | grep -qE "$2" && echo "OK   $1 $2" || echo "BRAK $1 $2"; }
+          sig() { javap -p -cp "$JAR" "$1" 2>&1 | grep -E "$2" | grep -v lambda | sed 's/net\.minecraft\.//g' | head -${3:-10}; }
           {
-            has net.minecraft.client.Camera 'void setRotation\(float, float\)'
-            has net.minecraft.world.entity.Entity 'void turn\(double, double\)'
-            has net.minecraft.client.renderer.LevelRenderer 'void submitHitOutline'
-            has net.minecraft.client.renderer.LevelRenderer 'renderHitOutline'
-            has net.minecraft.client.renderer.ItemInHandRenderer 'void submitArmWithItem'
-            has net.minecraft.client.renderer.ItemInHandRenderer 'void renderArmWithItem'
-            has net.minecraft.client.OptionInstance 'T get\(\)'
-            has net.minecraft.client.gui.GuiGraphicsExtractor 'enableScissor'
-            has net.minecraft.client.gui.GuiGraphics 'enableScissor'
+            sig net.minecraft.client.renderer.LevelRenderer 'HitOutline|BlockOutline|Outline'
+            sig net.minecraft.client.renderer.ItemInHandRenderer 'ArmWithItem|void render'
           } > m.txt
-          node ../launcher/test/annotate.js m.txt "Sonda ${{ matrix.mc }}" notice 2000
+          node ../launcher/test/annotate.js m.txt "Sygnatury ${{ matrix.mc }}" notice 3000
 
       - name: Przygotuj jar do wydania
         run: |
