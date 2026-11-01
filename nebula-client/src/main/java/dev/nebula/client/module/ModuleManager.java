@@ -2,7 +2,10 @@ package dev.nebula.client.module;
 
 import dev.nebula.client.module.impl.AppearanceModule;
 import dev.nebula.client.module.impl.ArmorModule;
+import dev.nebula.client.module.impl.BlockEspModule;
 import dev.nebula.client.module.impl.BlockOutlineModule;
+import dev.nebula.client.module.impl.StorageEspModule;
+import dev.nebula.client.module.impl.SusChunkModule;
 import dev.nebula.client.module.impl.GammaModule;
 import dev.nebula.client.module.impl.ItemCooldownModule;
 import dev.nebula.client.module.impl.MusicModule;
@@ -54,6 +57,9 @@ public final class ModuleManager {
 		register(new AppearanceModule());
 		register(new WatermarkModule());
 		register(new BlockOutlineModule());
+		register(new BlockEspModule());
+		register(new StorageEspModule());
+		register(new SusChunkModule());
 		register(new GammaModule());
 		register(new ViewModelModule());
 

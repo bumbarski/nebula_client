@@ -36,8 +36,11 @@ for dp, _, files in os.walk(os.path.join(DST, 'src', 'main', 'java')):
             (r'\bg\.itemDecorations\(', 'g.renderItemDecorations('),
             (r'public void extractRenderState\(', 'public void render('),
             (r'extractBlurredBackground\(g\)', 'renderBlurredBackground()'),
-            (r'g\.pose\(\)\.pushMatrix\(\);\s*g\.pose\(\)\.scale\(s, s\);', 'g.pose().pushPose();\n\t\tg.pose().scale(s, s, 1f);'),
+            (r'g\.pose\(\)\.pushMatrix\(\)', 'g.pose().pushPose()'),
             (r'g\.pose\(\)\.popMatrix\(\)', 'g.pose().popPose()'),
+            (r'g\.pose\(\)\.scale\(s, s\)', 'g.pose().scale(s, s, 1f)'),
+            (r'g\.pose\(\)\.translate\(x1, y1\)', 'g.pose().translate(x1, y1, 0f)'),
+            (r'g\.pose\(\)\.rotate\((.+?)\);', r'g.pose().mulPose(new org.joml.Quaternionf().rotateZ(\1));'),
             # eventy myszy i klawiszy -> sygnatury 1.21.4
             (r'import net\.minecraft\.client\.input\.\w+;\n', ''),
             (r'mouseClicked\(MouseButtonEvent event, boolean doubleClick\)', 'mouseClicked(double ex, double ey, int eb)'),

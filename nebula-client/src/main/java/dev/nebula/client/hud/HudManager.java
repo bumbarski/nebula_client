@@ -4,6 +4,8 @@ import dev.nebula.client.NebulaClient;
 import dev.nebula.client.module.HudModule;
 import dev.nebula.client.module.Module;
 import dev.nebula.client.module.ModuleManager;
+import dev.nebula.client.render.Projector;
+import dev.nebula.client.render.WorldOverlay;
 import dev.nebula.client.ui.Gfx;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -20,6 +22,15 @@ public final class HudManager {
 		ModuleManager modules = NebulaClient.modules();
 		for (Module m : modules.all()) {
 			if (m.isEnabled()) m.onFrame(mc);
+		}
+
+		// nakladki swiata (ESP, sus chunk) pod elementami HUD
+		Projector projector = null;
+		for (Module m : modules.all()) {
+			if (m.isEnabled() && m instanceof WorldOverlay overlay) {
+				if (projector == null) projector = Projector.create(mc);
+				overlay.drawWorld(g, mc, projector);
+			}
 		}
 
 		int sw = mc.getWindow().getGuiScaledWidth();

@@ -110,6 +110,34 @@ public final class Gfx {
 		roundOutline(g, x, y, w, h, r, row -> alpha(white, (0.52f - 0.40f * row / last) * a));
 	}
 
+	/** Linia 1 px miedzy dwoma punktami ekranu (obrocony prostokat, wiec jeden fill na linie). */
+	public static void line(GuiGraphicsExtractor g, float x1, float y1, float x2, float y2, int color) {
+		float dx = x2 - x1;
+		float dy = y2 - y1;
+		float len = (float) Math.sqrt(dx * dx + dy * dy);
+		if (len < 0.75f) {
+			int px = Math.round(x1);
+			int py = Math.round(y1);
+			g.fill(px, py, px + 1, py + 1, color);
+			return;
+		}
+		if (dy == 0f) {
+			int py = Math.round(y1);
+			g.fill(Math.round(Math.min(x1, x2)), py, Math.round(Math.max(x1, x2)) + 1, py + 1, color);
+			return;
+		}
+		if (dx == 0f) {
+			int px = Math.round(x1);
+			g.fill(px, Math.round(Math.min(y1, y2)), px + 1, Math.round(Math.max(y1, y2)) + 1, color);
+			return;
+		}
+		g.pose().pushMatrix();
+		g.pose().translate(x1, y1);
+		g.pose().rotate((float) Math.atan2(dy, dx));
+		g.fill(0, 0, Math.max(1, Math.round(len)), 1, color);
+		g.pose().popMatrix();
+	}
+
 	/** Skraca tekst do szerokosci maxW (w pikselach), dodajac "...". */
 	public static String fit(String s, int maxW) {
 		if (width(s) <= maxW) return s;

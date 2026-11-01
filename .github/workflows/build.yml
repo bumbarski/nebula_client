@@ -67,6 +67,25 @@ jobs:
           grep -nE "error:|FAILED|What went wrong|Caused by|Could not|not found|Unsupported" -A3 build.log | head -c 3500 > err.txt || true
           node ../launcher/test/annotate.js err.txt "Błędy builda ${{ matrix.mc }}" error 3600
 
+      - name: Sonda API (tymczasowa)
+        if: always()
+        run: |
+          if [ "${{ matrix.dir }}" = "nebula-client-1214" ]; then
+            JAR=$(find ~/.gradle /home/runner/work -name '*.jar' 2>/dev/null | grep '/minecraft-merged/' | grep -v sources | head -1)
+          else
+            JAR=$(find ~/.gradle/caches/fabric-loom/${{ matrix.mc }} -name minecraft-client.jar | head -1)
+          fi
+          sig() { javap -p -cp "$JAR" "$1" 2>&1 | grep -E "$2" | grep -v lambda | sed 's/net\.minecraft\.//g' | head -${3:-12}; }
+          {
+            echo "JAR: $JAR"
+            sig net.minecraft.client.Camera 'Rot|osition|rotation' 10
+            sig net.minecraft.client.multiplayer.ClientChunkCache 'getChunkNow' 3
+            sig net.minecraft.world.level.chunk.ChunkSource 'getChunkNow' 3
+            sig net.minecraft.world.entity.Entity 'int getBlockX' 2
+            sig net.minecraft.client.renderer.GameRenderer 'getMainCamera' 2
+          } > p.txt
+          node ../launcher/test/annotate.js p.txt "Sonda ${{ matrix.mc }}" notice 3000
+
       - name: Przygotuj jar do wydania
         run: |
           mkdir -p ../dist-mod
