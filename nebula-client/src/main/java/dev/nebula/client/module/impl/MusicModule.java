@@ -111,7 +111,7 @@ public final class MusicModule extends HudModule {
 				rows[i] = k >= 0 && k < sample.length ? sample[k] : "";
 			}
 		} else {
-			Lyrics.Entry e = Lyrics.get(t);
+			Lyrics.Result e = Lyrics.get(t);
 			switch (e.state) {
 				case LOADING -> rows[centre] = "Szukam tekstu...";
 				case NONE -> rows[centre] = "Brak tekstu";

@@ -24,27 +24,27 @@ public final class Lyrics {
 
 	public enum State { LOADING, SYNCED, PLAIN_ONLY, NONE, ERROR }
 
-	public static final class Entry {
+	public static final class Result {
 		public volatile State state = State.LOADING;
 		public volatile List<LrcParser.Line> lines = List.of();
 	}
 
 	private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(6)).build();
-	private static final Map<String, Entry> CACHE = new LinkedHashMap<>(16, 0.75f, true) {
+	private static final Map<String, Result> CACHE = new LinkedHashMap<String, Result>(16, 0.75f, true) {
 		@Override
-		protected boolean removeEldestEntry(Map.Entry<String, Entry> eldest) {
+		protected boolean removeEldestEntry(Map.Entry<String, Result> eldest) {
 			return size() > 30;
 		}
 	};
 
-	public static Entry get(MediaService.Track t) {
+	public static Result get(MediaService.Track t) {
 		String key = (t.artist() + "|" + t.title()).toLowerCase();
 		synchronized (CACHE) {
-			Entry e = CACHE.get(key);
+			Result e = CACHE.get(key);
 			if (e != null) return e;
-			e = new Entry();
+			e = new Result();
 			CACHE.put(key, e);
-			final Entry entry = e;
+			final Result entry = e;
 			Thread th = new Thread(() -> fetch(t, entry), "nebula-lyrics");
 			th.setDaemon(true);
 			th.start();
@@ -52,7 +52,7 @@ public final class Lyrics {
 		}
 	}
 
-	private static void fetch(MediaService.Track t, Entry e) {
+	private static void fetch(MediaService.Track t, Result e) {
 		try {
 			String synced = null;
 			boolean anyText = false;
