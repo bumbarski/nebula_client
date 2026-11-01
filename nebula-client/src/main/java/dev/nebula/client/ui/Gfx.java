@@ -99,6 +99,14 @@ public final class Gfx {
 		rect(g, x + w - 1, y + rr, 1, h - 2 * rr, alpha(white, 0.12f * a));
 	}
 
+	/** Skraca tekst do szerokosci maxW (w pikselach), dodajac "...". */
+	public static String fit(String s, int maxW) {
+		if (width(s) <= maxW) return s;
+		String dots = "...";
+		while (s.length() > 1 && width(s + dots) > maxW) s = s.substring(0, s.length() - 1);
+		return s + dots;
+	}
+
 	public static void text(GuiGraphicsExtractor g, String s, int x, int y, int color, boolean shadow) {
 		g.text(Minecraft.getInstance().font, s, x, y, color, shadow);
 	}

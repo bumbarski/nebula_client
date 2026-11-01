@@ -5,6 +5,7 @@ import dev.nebula.client.module.impl.ArmorModule;
 import dev.nebula.client.module.impl.BlockOutlineModule;
 import dev.nebula.client.module.impl.GammaModule;
 import dev.nebula.client.module.impl.ItemCooldownModule;
+import dev.nebula.client.module.impl.MusicModule;
 import dev.nebula.client.module.impl.ViewModelModule;
 import dev.nebula.client.module.impl.ClockModule;
 import dev.nebula.client.module.impl.CoordsModule;
@@ -42,6 +43,7 @@ public final class ModuleManager {
 		register(new ArmorModule());
 		register(new PotionModule());
 		register(new ItemCooldownModule());
+		register(new MusicModule());
 
 		register(new AppearanceModule());
 		register(new WatermarkModule());
