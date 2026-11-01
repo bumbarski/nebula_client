@@ -58,9 +58,9 @@ public final class ArmorModule extends HudModule {
 		w = pad * 2 + 3 + 16 + 4 + textW;
 		h = shown * rowH + pad * 2 - 2;
 		if (background.value) {
-			Gfx.panel(g, x, y, w, h, 4, 1f);
+			Gfx.panel(g, x, y, w, h, 7, 1f);
 		}
-		Gfx.roundRect(g, x + 1, y + 3, 2, h - 6, 1, Theme.accent());
+		Gfx.roundRect(g, x + 3, y + 5, 2, h - 10, 1, Theme.accent());
 
 		var font = mc.font;
 		int ty = y + pad;

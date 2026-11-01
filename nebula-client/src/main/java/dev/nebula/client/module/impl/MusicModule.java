@@ -62,8 +62,8 @@ public final class MusicModule extends HudModule {
 		w = cw;
 		h = hgt;
 
-		Gfx.panel(g, x, y, w, h, 6, 1f);
-		Gfx.roundRect(g, x + 3, y + 6, 2, h - 12, 1, Theme.accent());
+		Gfx.panel(g, x, y, w, h, 8, 1f);
+		Gfx.roundRect(g, x + 4, y + 7, 2, h - 14, 1, Theme.accent());
 
 		int tx = x + pad + 3;
 		inner -= 3;

@@ -117,10 +117,10 @@ public final class ClickGuiScreen extends Screen {
 			Gfx.roundRect(g, wx - i, wy - i, winW + i * 2, winH + i * 2, 8 + i, Gfx.alpha(0xFF000000, 0.07f * a));
 		}
 		if (Theme.glass()) {
-			Gfx.panel(g, wx, wy, winW, winH, 10, a);
+			Gfx.panel(g, wx, wy, winW, winH, 16, a);
 			// plywajacy pasek boczny z ciemniejszego szkla
-			Gfx.roundRect(g, wx + 5, wy + 5, SIDEBAR - 6, winH - 10, 7, Gfx.alpha(0xFF000000, 0.26f * a));
-			Gfx.glassShine(g, wx + 5, wy + 5, SIDEBAR - 6, winH - 10, 7, 0.45f * a);
+			Gfx.roundRect(g, wx + 6, wy + 6, SIDEBAR - 8, winH - 12, 12, Gfx.alpha(0xFF000000, 0.26f * a));
+			Gfx.glassShine(g, wx + 6, wy + 6, SIDEBAR - 8, winH - 12, 12, 0.45f * a);
 		} else {
 			Gfx.roundRect(g, wx, wy, winW, winH, 8, Gfx.alpha(Theme.PANEL, Math.max(0.94f, Theme.opacity()) * a));
 			Gfx.roundRect(g, wx, wy, SIDEBAR + 8, winH, 8, Gfx.alpha(Theme.HEADER, a));
@@ -187,7 +187,7 @@ public final class ClickGuiScreen extends Screen {
 	private void drawContent(GuiGraphicsExtractor g, int cx, int wy, int cw, int winH,
 							 int mx, int my, float dt, float a) {
 		// wyszukiwarka
-		Gfx.roundRect(g, cx, wy + 10, cw, 22, 6, Gfx.alpha(Theme.glass() ? 0xFF000000 : 0xFF12121B, (Theme.glass() ? 0.30f : 1f) * a));
+		Gfx.roundRect(g, cx, wy + 10, cw, 22, 11, Gfx.alpha(Theme.glass() ? 0xFF000000 : 0xFF12121B, (Theme.glass() ? 0.30f : 1f) * a));
 		boolean caret = (System.currentTimeMillis() / 500) % 2 == 0;
 		if (query.isEmpty()) {
 			Gfx.text(g, "Szukaj modułów...  (PPM = ustawienia)", cx + 10, wy + 17, Gfx.alpha(Theme.MUTED, 0.8f * a), false);
@@ -255,8 +255,9 @@ public final class ClickGuiScreen extends Screen {
 		boolean expanded = EXPANDED.contains(m);
 
 		if (Theme.glass()) {
-			Gfx.roundRect(g, x, y, w, total, 6, Gfx.alpha(0xFFFFFFFF, (hover ? 0.14f : 0.07f) * a));
-			Gfx.rect(g, x + 6, y, w - 12, 1, Gfx.alpha(0xFFFFFFFF, 0.28f * a));
+			Gfx.roundRect(g, x, y, w, total, 10, Gfx.alpha(0xFFFFFFFF, (hover ? 0.14f : 0.07f) * a));
+			final int th = Math.max(1, total - 1);
+			Gfx.roundOutline(g, x, y, w, total, 10, row -> Gfx.alpha(0xFFFFFFFF, (0.26f - 0.18f * row / th) * a));
 		} else {
 			Gfx.roundRect(g, x, y, w, total, 6, Gfx.alpha(hover ? CARD_HOVER : CARD, a));
 		}
@@ -308,7 +309,7 @@ public final class ClickGuiScreen extends Screen {
 	}
 
 	private void drawSettings(GuiGraphicsExtractor g, Module m, int x, int y, int w, float a) {
-		Gfx.roundRect(g, x + 6, y, w - 12, settingsHeight(m) + 2, 5,
+		Gfx.roundRect(g, x + 6, y, w - 12, settingsHeight(m) + 2, 8,
 				Gfx.alpha(Theme.glass() ? 0xFF000000 : SETTINGS_BG, (Theme.glass() ? 0.28f : 1f) * a));
 		int lx = x + 16;
 		int rx = x + w - 16;

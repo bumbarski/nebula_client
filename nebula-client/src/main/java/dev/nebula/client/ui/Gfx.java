@@ -3,6 +3,8 @@ package dev.nebula.client.ui;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 
+import java.util.function.IntUnaryOperator;
+
 /**
  * Cienka warstwa nad rysowaniem GUI. Cale rysowanie w kliencie idzie przez te metody,
  * wiec gdy Mojang zmieni nazwy w API, poprawiasz je tylko tutaj.
@@ -43,23 +45,29 @@ public final class Gfx {
 		g.outline(x, y, w, h, color);
 	}
 
-	/**
-	 * Zaokraglony prostokat zlozony z poziomych pasow. Pasy sie nie nakladaja,
-	 * wiec dziala poprawnie takze z polprzezroczystymi kolorami.
-	 */
+	/** Zaokraglony prostokat z wygladzonymi (antyaliasowanymi) narozami. */
 	public static void roundRect(GuiGraphicsExtractor g, int x, int y, int w, int h, int r, int color) {
-		r = Math.min(r, Math.min(w, h) / 2);
-		if (r <= 0) {
-			rect(g, x, y, w, h, color);
-			return;
-		}
-		for (int i = 0; i < r; i++) {
-			double dy = r - i - 0.5;
-			int inset = (int) Math.round(r - Math.sqrt(r * r - dy * dy));
-			g.fill(x + inset, y + i, x + w - inset, y + i + 1, color);
-			g.fill(x + inset, y + h - i - 1, x + w - inset, y + h - i, color);
-		}
-		g.fill(x, y + r, x + w, y + h - r, color);
+		roundRectRows(g, x, y, w, h, r, row -> color);
+	}
+
+	/** Jak roundRect, ale kolor moze zalezec od wiersza (gradienty pionowe przycinane do ksztaltu). */
+	public static void roundRectRows(GuiGraphicsExtractor g, int x, int y, int w, int h, int r, IntUnaryOperator rowColor) {
+		RoundGeom.fill(w, h, r, (row, x1, x2, cover) -> {
+			int c = rowColor.applyAsInt(row);
+			if ((c >>> 24) == 0) return;
+			if (cover < 1f) c = alpha(c, cover);
+			g.fill(x + x1, y + row, x + x2, y + row + 1, c);
+		});
+	}
+
+	/** Obwodka (1 px) zaokraglonego prostokata, kolor zalezny od wiersza. */
+	public static void roundOutline(GuiGraphicsExtractor g, int x, int y, int w, int h, int r, IntUnaryOperator rowColor) {
+		RoundGeom.outline(w, h, r, (row, x1, x2, cover) -> {
+			int c = rowColor.applyAsInt(row);
+			if ((c >>> 24) == 0) return;
+			if (cover < 1f) c = alpha(c, cover);
+			g.fill(x + x1, y + row, x + x2, y + row + 1, c);
+		});
 	}
 
 	/** Zaczyna rysowanie w skali s (kazde pushScale musi miec popScale). */
@@ -86,17 +94,20 @@ public final class Gfx {
 		glassShine(g, x, y, w, h, r, a);
 	}
 
-	/** Polysk szkla: jasny gradient u gory, poswiata akcentu na dole i krawedzie swiatla. */
+	/** Polysk szkla: jasny gradient u gory, poswiata akcentu na dole i obwodka swiatla, wszystko w ksztalcie zaokraglonym. */
 	public static void glassShine(GuiGraphicsExtractor g, int x, int y, int w, int h, int r, float a) {
-		int rr = Math.min(r, Math.max(1, h / 2));
-		int white = 0xFFFFFFFF;
-		gradient(g, x + rr, y + 1, w - 2 * rr, Math.max(1, h / 2), alpha(white, 0.17f * a), alpha(white, 0f));
-		gradient(g, x + rr, y + h - Math.max(2, h / 3) - 1, w - 2 * rr, Math.max(2, h / 3),
-				alpha(Theme.accent(), 0f), alpha(Theme.accent(), 0.13f * a));
-		rect(g, x + rr, y, w - 2 * rr, 1, alpha(white, 0.55f * a));
-		rect(g, x + rr, y + h - 1, w - 2 * rr, 1, alpha(white, 0.13f * a));
-		rect(g, x, y + rr, 1, h - 2 * rr, alpha(white, 0.24f * a));
-		rect(g, x + w - 1, y + rr, 1, h - 2 * rr, alpha(white, 0.12f * a));
+		final int white = 0xFFFFFFFF;
+		final int accent = Theme.accent();
+		final int topH = Math.max(2, h / 2);
+		final int glowH = Math.max(2, h / 3);
+		roundRectRows(g, x, y, w, h, r, row -> {
+			if (row < topH) return alpha(white, 0.17f * a * (1f - (float) row / topH));
+			int fromBottom = h - 1 - row;
+			if (fromBottom < glowH) return alpha(accent, 0.13f * a * (1f - (float) fromBottom / glowH));
+			return 0;
+		});
+		final int last = Math.max(1, h - 1);
+		roundOutline(g, x, y, w, h, r, row -> alpha(white, (0.52f - 0.40f * row / last) * a));
 	}
 
 	/** Skraca tekst do szerokosci maxW (w pikselach), dodajac "...". */
