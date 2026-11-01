@@ -78,11 +78,10 @@ jobs:
           sig() { javap -p -cp "$JAR" "$1" 2>&1 | grep -E "$2" | grep -v lambda | sed 's/net\.minecraft\.//g' | head -${3:-12}; }
           {
             echo "JAR: $JAR"
-            sig net.minecraft.client.Camera 'Rot|osition|rotation' 10
-            sig net.minecraft.client.multiplayer.ClientChunkCache 'getChunkNow' 3
-            sig net.minecraft.world.level.chunk.ChunkSource 'getChunkNow' 3
-            sig net.minecraft.world.entity.Entity 'int getBlockX' 2
-            sig net.minecraft.client.renderer.GameRenderer 'getMainCamera' 2
+            javap -p -cp "$JAR" net.minecraft.client.Camera 2>&1 | grep -E 'public' | sed 's/net\.minecraft\.//g' | head -30
+            sig net.minecraft.client.renderer.GameRenderer 'amera' 8
+            sig net.minecraft.client.Minecraft 'amera' 8
+            sig net.minecraft.client.renderer.state.level.CameraRenderState '.*' 12
           } > p.txt
           node ../launcher/test/annotate.js p.txt "Sonda ${{ matrix.mc }}" notice 3000
 
