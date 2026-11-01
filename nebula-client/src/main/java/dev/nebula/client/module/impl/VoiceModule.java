@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
  */
 public final class VoiceModule extends Module {
 	private static final String GREETING = "Приветствия на «Небуле»";
-	private static final String FAREWELL = "Пошёл ты на хуй, сукин сын";
+	private static final String FAREWELL = "Добро пожаловать в «Небулу»";
 
 	private final BoolSetting onStart = add(new BoolSetting("Powitanie przy starcie", true));
 	private final BoolSetting onStop = add(new BoolSetting("Pożegnanie przy zamknięciu", true));
