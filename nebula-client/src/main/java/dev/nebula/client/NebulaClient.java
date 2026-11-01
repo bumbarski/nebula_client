@@ -61,7 +61,11 @@ public final class NebulaClient implements ClientModInitializer {
 				(graphics, deltaTracker) -> HudManager.render(graphics)
 		);
 
-		ClientLifecycleEvents.CLIENT_STOPPING.register(mc -> ConfigManager.save(modules));
+		ClientLifecycleEvents.CLIENT_STARTED.register(mc -> modules.voice().greet());
+		ClientLifecycleEvents.CLIENT_STOPPING.register(mc -> {
+			ConfigManager.save(modules);
+			modules.voice().farewell();
+		});
 		LOGGER.info("Nebula Client załadowany");
 	}
 }

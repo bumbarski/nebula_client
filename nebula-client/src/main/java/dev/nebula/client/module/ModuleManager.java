@@ -7,6 +7,7 @@ import dev.nebula.client.module.impl.GammaModule;
 import dev.nebula.client.module.impl.ItemCooldownModule;
 import dev.nebula.client.module.impl.MusicModule;
 import dev.nebula.client.module.impl.ViewModelModule;
+import dev.nebula.client.module.impl.VoiceModule;
 import dev.nebula.client.module.impl.ClockModule;
 import dev.nebula.client.module.impl.CoordsModule;
 import dev.nebula.client.module.impl.CpsModule;
@@ -27,6 +28,11 @@ public final class ModuleManager {
 	private final List<Module> all = new ArrayList<>();
 
 	private final FreelookModule freelook = new FreelookModule();
+	private final VoiceModule voice = new VoiceModule();
+
+	public VoiceModule voice() {
+		return voice;
+	}
 
 	public FreelookModule freelook() {
 		return freelook;
@@ -52,6 +58,7 @@ public final class ModuleManager {
 		register(new ViewModelModule());
 
 		register(freelook);
+		register(voice);
 		register(new ToggleKeysModule());
 	}
 
