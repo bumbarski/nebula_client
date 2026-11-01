@@ -100,12 +100,15 @@ public final class ClickGuiScreen extends Screen {
 
 		hits.clear();
 
+		if (Theme.glass() && Theme.blur()) {
+			extractBlurredBackground(g);
+		}
 		Gfx.gradient(g, 0, 0, width, height,
-				Gfx.alpha(0xFF05050A, 0.50f * a),
-				Gfx.alpha(Gfx.lerp(0xFF05050A, Theme.accentDark(), 0.30f), 0.66f * a));
+				Gfx.alpha(0xFF05050A, (Theme.glass() ? 0.28f : 0.50f) * a),
+				Gfx.alpha(Gfx.lerp(0xFF05050A, Theme.accentDark(), 0.30f), (Theme.glass() ? 0.45f : 0.66f) * a));
 
-		int winW = Math.min(width - 24, 500);
-		int winH = Math.min(height - 24, 320);
+		int winW = Math.min(width - 24, Math.round(500 * Theme.menuSize()));
+		int winH = Math.min(height - 24, Math.round(320 * Theme.menuSize()));
 		int wx = (width - winW) / 2;
 		int wy = (height - winH) / 2 + Math.round((1f - a) * 12f);
 
@@ -113,10 +116,17 @@ public final class ClickGuiScreen extends Screen {
 		for (int i = 6; i >= 1; i--) {
 			Gfx.roundRect(g, wx - i, wy - i, winW + i * 2, winH + i * 2, 8 + i, Gfx.alpha(0xFF000000, 0.07f * a));
 		}
-		Gfx.roundRect(g, wx, wy, winW, winH, 8, Gfx.alpha(Theme.PANEL, Math.max(0.94f, Theme.opacity()) * a));
-		Gfx.roundRect(g, wx, wy, SIDEBAR + 8, winH, 8, Gfx.alpha(Theme.HEADER, a));
-		Gfx.rect(g, wx + SIDEBAR, wy, 8, winH, Gfx.alpha(Theme.PANEL, Math.max(0.94f, Theme.opacity()) * a));
-		Gfx.rect(g, wx + SIDEBAR, wy + 8, 1, winH - 16, Gfx.alpha(0xFFFFFFFF, 0.05f * a));
+		if (Theme.glass()) {
+			Gfx.panel(g, wx, wy, winW, winH, 10, a);
+			// plywajacy pasek boczny z ciemniejszego szkla
+			Gfx.roundRect(g, wx + 5, wy + 5, SIDEBAR - 6, winH - 10, 7, Gfx.alpha(0xFF000000, 0.26f * a));
+			Gfx.glassShine(g, wx + 5, wy + 5, SIDEBAR - 6, winH - 10, 7, 0.45f * a);
+		} else {
+			Gfx.roundRect(g, wx, wy, winW, winH, 8, Gfx.alpha(Theme.PANEL, Math.max(0.94f, Theme.opacity()) * a));
+			Gfx.roundRect(g, wx, wy, SIDEBAR + 8, winH, 8, Gfx.alpha(Theme.HEADER, a));
+			Gfx.rect(g, wx + SIDEBAR, wy, 8, winH, Gfx.alpha(Theme.PANEL, Math.max(0.94f, Theme.opacity()) * a));
+			Gfx.rect(g, wx + SIDEBAR, wy + 8, 1, winH - 16, Gfx.alpha(0xFFFFFFFF, 0.05f * a));
+		}
 
 		drawSidebar(g, wx, wy, winH, mouseX, mouseY, a);
 		drawContent(g, wx + SIDEBAR + 14, wy, winW - SIDEBAR - 28, winH, mouseX, mouseY, dt, a);
@@ -177,7 +187,7 @@ public final class ClickGuiScreen extends Screen {
 	private void drawContent(GuiGraphicsExtractor g, int cx, int wy, int cw, int winH,
 							 int mx, int my, float dt, float a) {
 		// wyszukiwarka
-		Gfx.roundRect(g, cx, wy + 10, cw, 22, 6, Gfx.alpha(0xFF12121B, a));
+		Gfx.roundRect(g, cx, wy + 10, cw, 22, 6, Gfx.alpha(Theme.glass() ? 0xFF000000 : 0xFF12121B, (Theme.glass() ? 0.30f : 1f) * a));
 		boolean caret = (System.currentTimeMillis() / 500) % 2 == 0;
 		if (query.isEmpty()) {
 			Gfx.text(g, "Szukaj modułów...  (PPM = ustawienia)", cx + 10, wy + 17, Gfx.alpha(Theme.MUTED, 0.8f * a), false);
@@ -244,7 +254,12 @@ public final class ClickGuiScreen extends Screen {
 		boolean hasSettings = !m.settings.isEmpty();
 		boolean expanded = EXPANDED.contains(m);
 
-		Gfx.roundRect(g, x, y, w, total, 6, Gfx.alpha(hover ? CARD_HOVER : CARD, a));
+		if (Theme.glass()) {
+			Gfx.roundRect(g, x, y, w, total, 6, Gfx.alpha(0xFFFFFFFF, (hover ? 0.14f : 0.07f) * a));
+			Gfx.rect(g, x + 6, y, w - 12, 1, Gfx.alpha(0xFFFFFFFF, 0.28f * a));
+		} else {
+			Gfx.roundRect(g, x, y, w, total, 6, Gfx.alpha(hover ? CARD_HOVER : CARD, a));
+		}
 		if (on && m.isToggleable()) {
 			Gfx.roundRect(g, x, y + 7, 2, CARD_H - 14, 1, Gfx.alpha(Theme.accent(), a));
 		}
@@ -293,7 +308,8 @@ public final class ClickGuiScreen extends Screen {
 	}
 
 	private void drawSettings(GuiGraphicsExtractor g, Module m, int x, int y, int w, float a) {
-		Gfx.roundRect(g, x + 6, y, w - 12, settingsHeight(m) + 2, 5, Gfx.alpha(SETTINGS_BG, a));
+		Gfx.roundRect(g, x + 6, y, w - 12, settingsHeight(m) + 2, 5,
+				Gfx.alpha(Theme.glass() ? 0xFF000000 : SETTINGS_BG, (Theme.glass() ? 0.28f : 1f) * a));
 		int lx = x + 16;
 		int rx = x + w - 16;
 		int cy = y + 2;

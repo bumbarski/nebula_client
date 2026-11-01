@@ -4,6 +4,7 @@ import dev.nebula.client.NebulaClient;
 import dev.nebula.client.module.HudModule;
 import dev.nebula.client.module.Module;
 import dev.nebula.client.module.ModuleManager;
+import dev.nebula.client.ui.Gfx;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 
@@ -26,8 +27,28 @@ public final class HudManager {
 		for (HudModule hud : modules.hud()) {
 			if (!hud.isEnabled()) continue;
 			clamp(hud, sw, sh);
-			hud.draw(g, mc, false);
+			drawScaled(g, mc, hud, false);
 		}
+	}
+
+	/** Rysuje element z jego skala; w and h po wywolaniu sa juz po przeskalowaniu (do przesuwania w edytorze). */
+	public static void drawScaled(GuiGraphicsExtractor g, Minecraft mc, HudModule hud, boolean preview) {
+		float s = hud.scale.getFloat();
+		if (Math.abs(s - 1f) < 0.001f) {
+			hud.draw(g, mc, preview);
+			return;
+		}
+		int ox = hud.x;
+		int oy = hud.y;
+		hud.x = Math.round(ox / s);
+		hud.y = Math.round(oy / s);
+		Gfx.pushScale(g, s);
+		hud.draw(g, mc, preview);
+		Gfx.popScale(g);
+		hud.x = ox;
+		hud.y = oy;
+		hud.w = Math.round(hud.w * s);
+		hud.h = Math.round(hud.h * s);
 	}
 
 	/** Trzyma element w granicach ekranu (dziala tez po zmianie rozmiaru okna). */

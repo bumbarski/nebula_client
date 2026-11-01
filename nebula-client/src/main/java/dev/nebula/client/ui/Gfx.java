@@ -62,6 +62,43 @@ public final class Gfx {
 		g.fill(x, y + r, x + w, y + h - r, color);
 	}
 
+	/** Zaczyna rysowanie w skali s (kazde pushScale musi miec popScale). */
+	public static void pushScale(GuiGraphicsExtractor g, float s) {
+		g.pose().pushMatrix();
+		g.pose().scale(s, s);
+	}
+
+	public static void popScale(GuiGraphicsExtractor g) {
+		g.pose().popMatrix();
+	}
+
+	/**
+	 * Tlo elementu HUD/okna: w stylu "Szklo" przezroczysta ciemna tafla z jasnym polyskiem u gory
+	 * i cienka krawedzia, w stylu "Ciemny" zwykle zaokraglone tlo.
+	 */
+	public static void panel(GuiGraphicsExtractor g, int x, int y, int w, int h, int r, float a) {
+		if (!Theme.glass()) {
+			roundRect(g, x, y, w, h, r, alpha(Theme.BG, Theme.opacity() * a));
+			return;
+		}
+		float op = Theme.opacity();
+		roundRect(g, x, y, w, h, r, alpha(0xFF0C0F18, (0.28f + 0.40f * op) * a));
+		glassShine(g, x, y, w, h, r, a);
+	}
+
+	/** Polysk szkla: jasny gradient u gory, poswiata akcentu na dole i krawedzie swiatla. */
+	public static void glassShine(GuiGraphicsExtractor g, int x, int y, int w, int h, int r, float a) {
+		int rr = Math.min(r, Math.max(1, h / 2));
+		int white = 0xFFFFFFFF;
+		gradient(g, x + rr, y + 1, w - 2 * rr, Math.max(1, h / 2), alpha(white, 0.17f * a), alpha(white, 0f));
+		gradient(g, x + rr, y + h - Math.max(2, h / 3) - 1, w - 2 * rr, Math.max(2, h / 3),
+				alpha(Theme.accent(), 0f), alpha(Theme.accent(), 0.13f * a));
+		rect(g, x + rr, y, w - 2 * rr, 1, alpha(white, 0.55f * a));
+		rect(g, x + rr, y + h - 1, w - 2 * rr, 1, alpha(white, 0.13f * a));
+		rect(g, x, y + rr, 1, h - 2 * rr, alpha(white, 0.24f * a));
+		rect(g, x + w - 1, y + rr, 1, h - 2 * rr, alpha(white, 0.12f * a));
+	}
+
 	public static void text(GuiGraphicsExtractor g, String s, int x, int y, int color, boolean shadow) {
 		g.text(Minecraft.getInstance().font, s, x, y, color, shadow);
 	}

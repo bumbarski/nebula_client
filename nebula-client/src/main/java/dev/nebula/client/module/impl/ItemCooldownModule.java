@@ -53,7 +53,7 @@ public final class ItemCooldownModule extends HudModule {
 		w = pad * 2 + 3 + 16 + 4 + barW;
 		h = stacks.size() * rowH + pad * 2 - 2;
 		if (background.value) {
-			Gfx.roundRect(g, x, y, w, h, 3, Gfx.alpha(Theme.BG, Theme.opacity()));
+			Gfx.panel(g, x, y, w, h, 4, 1f);
 		}
 		Gfx.roundRect(g, x + 1, y + 3, 2, h - 6, 1, Theme.accent());
 

@@ -11,6 +11,9 @@ import dev.nebula.client.ui.Theme;
 public final class AppearanceModule extends Module {
 	public final ModeSetting theme = add(new ModeSetting("Motyw", Theme.NAMES, 0));
 	public final NumberSetting opacity = add(new NumberSetting("Przezroczystość tła", 0.30, 1.0, 0.85, 0.05));
+	public final ModeSetting style = add(new ModeSetting("Styl", new String[]{"Szkło", "Ciemny"}, 0));
+	public final BoolSetting blur = add(new BoolSetting("Rozmycie tła menu", true));
+	public final NumberSetting menuSize = add(new NumberSetting("Rozmiar okna menu", 0.7, 1.5, 1.0, 0.05));
 	public final BoolSetting animations = add(new BoolSetting("Animacje", true));
 
 	public AppearanceModule() {

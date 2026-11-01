@@ -46,7 +46,7 @@ public final class HudEditorScreen extends Screen {
 		for (HudModule m : all) {
 			if (!m.isEnabled()) continue;
 			HudManager.clamp(m, width, height);
-			m.draw(g, minecraft, true);
+			HudManager.drawScaled(g, minecraft, m, true);
 		}
 
 		for (HudModule m : all) {

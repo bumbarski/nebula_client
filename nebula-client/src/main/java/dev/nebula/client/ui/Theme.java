@@ -36,6 +36,20 @@ public final class Theme {
 		return appearance == null ? 0.85f : appearance.opacity.getFloat();
 	}
 
+	/** true = styl "Szklo" (liquid glass). */
+	public static boolean glass() {
+		return appearance == null || appearance.style.index() == 0;
+	}
+
+	public static boolean blur() {
+		return appearance != null && appearance.blur.value;
+	}
+
+	/** Mnoznik rozmiaru okna menu (0.7 - 1.5). */
+	public static float menuSize() {
+		return appearance == null ? 1f : appearance.menuSize.getFloat();
+	}
+
 	public static boolean animations() {
 		return appearance == null || appearance.animations.value;
 	}

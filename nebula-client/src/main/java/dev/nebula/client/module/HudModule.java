@@ -1,6 +1,7 @@
 package dev.nebula.client.module;
 
 import dev.nebula.client.setting.BoolSetting;
+import dev.nebula.client.setting.NumberSetting;
 import dev.nebula.client.ui.Gfx;
 import dev.nebula.client.ui.Theme;
 import net.minecraft.client.Minecraft;
@@ -16,6 +17,7 @@ public abstract class HudModule extends Module {
 	public int w;
 	public int h;
 
+	public final NumberSetting scale = add(new NumberSetting("Skala", 0.5, 2.0, 1.0, 0.1));
 	protected final BoolSetting background = add(new BoolSetting("Tło", true));
 	protected final BoolSetting shadow = add(new BoolSetting("Cień tekstu", false));
 
@@ -47,7 +49,7 @@ public abstract class HudModule extends Module {
 		h = rows.size() * lineH + pad * 2 - 2;
 
 		if (background.value) {
-			Gfx.roundRect(g, x, y, w, h, 3, Gfx.alpha(Theme.BG, Theme.opacity()));
+			Gfx.panel(g, x, y, w, h, 4, 1f);
 		}
 		Gfx.roundRect(g, x + 1, y + 3, 2, h - 6, 1, Theme.accent());
 
