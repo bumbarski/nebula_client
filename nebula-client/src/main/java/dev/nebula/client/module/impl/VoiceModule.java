@@ -26,8 +26,8 @@ import java.util.concurrent.TimeUnit;
  * czyta tekst glosem systemowym Windows (rosyjski glos zenski, np. Microsoft Irina).
  */
 public final class VoiceModule extends Module {
-	private static final String GREETING = "Приветствия на «Небуле»";
-	private static final String FAREWELL = "Добро пожаловать в «Небулу»";
+	private static final String GREETING = "Добро пожаловать в «Небулу»";
+	private static final String FAREWELL = "Пошёл ты на хуй, сукин сын";
 
 	private final BoolSetting onStart = add(new BoolSetting("Powitanie przy starcie", true));
 	private final BoolSetting onStop = add(new BoolSetting("Pożegnanie przy zamknięciu", true));
