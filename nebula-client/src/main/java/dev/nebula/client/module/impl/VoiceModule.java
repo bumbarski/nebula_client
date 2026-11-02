@@ -26,8 +26,14 @@ import java.util.concurrent.TimeUnit;
  * czyta tekst glosem systemowym Windows (rosyjski glos zenski, np. Microsoft Irina).
  */
 public final class VoiceModule extends Module {
-	private static final String GREETING = "Добро пожаловать в «Небулу»";
-	private static final String FAREWELL = "Пошёл ты на хуй, сукин сын";
+	/** Tekst po rosyjsku oraz zapis fonetyczny dla glosow bez rosyjskiego (polskie i angielskie). */
+	private record Phrase(String ru, String pl, String en) {
+	}
+
+	private static final Phrase GREETING = new Phrase("Добро пожаловать в «Небулу»",
+			"Dobro pożałowat w Nebulu", "Dobro pozhalovat v Nebulu");
+	private static final Phrase FAREWELL = new Phrase("Пошёл ты на хуй, сукин сын",
+			"Paszoł ty na huj, sukin syn", "Pashol ty na khuy, sookin sin");
 
 	private final BoolSetting onStart = add(new BoolSetting("Powitanie przy starcie", true));
 	private final BoolSetting onStop = add(new BoolSetting("Pożegnanie przy zamknięciu", true));
@@ -51,7 +57,7 @@ public final class VoiceModule extends Module {
 		play("stop", FAREWELL, true);
 	}
 
-	private void play(String name, String text, boolean wait) {
+	private void play(String name, Phrase text, boolean wait) {
 		try {
 			Path custom = FabricLoader.getInstance().getConfigDir().resolve("nebula").resolve(name + ".wav");
 			if (Files.isRegularFile(custom)) {
@@ -89,28 +95,45 @@ public final class VoiceModule extends Module {
 		}
 	}
 
-	private void speakWindows(String text, boolean wait) throws Exception {
+	private void speakWindows(Phrase text, boolean wait) throws Exception {
+		// Kolejnosc: rosyjski glos zenski, dowolny rosyjski, polski zenski (zapis fonetyczny), jakikolwiek zenski/inny (zapis angielski)
 		String script = String.join("\n",
 				"Add-Type -AssemblyName System.Speech",
 				"$s = New-Object System.Speech.Synthesis.SpeechSynthesizer",
-				"$all = @($s.GetInstalledVoices() | Where-Object { $_.Enabled -and $_.VoiceInfo.Culture.Name -like 'ru*' })",
-				"$v = $all | Where-Object { $_.VoiceInfo.Gender -eq 'Female' } | Select-Object -First 1",
-				"if (-not $v) { $v = $all | Select-Object -First 1 }",
+				"$all = @($s.GetInstalledVoices() | Where-Object { $_.Enabled })",
+				"$say = '" + q(text.ru()) + "'",
+				"$v = $all | Where-Object { $_.VoiceInfo.Culture.Name -like 'ru*' -and $_.VoiceInfo.Gender -eq 'Female' } | Select-Object -First 1",
+				"if (-not $v) { $v = $all | Where-Object { $_.VoiceInfo.Culture.Name -like 'ru*' } | Select-Object -First 1 }",
+				"if (-not $v) { $say = '" + q(text.pl()) + "'; $v = $all | Where-Object { $_.VoiceInfo.Culture.Name -like 'pl*' -and $_.VoiceInfo.Gender -eq 'Female' } | Select-Object -First 1 }",
+				"if (-not $v) { $say = '" + q(text.pl()) + "'; $v = $all | Where-Object { $_.VoiceInfo.Culture.Name -like 'pl*' } | Select-Object -First 1 }",
+				"if (-not $v) { $say = '" + q(text.en()) + "'; $v = $all | Where-Object { $_.VoiceInfo.Gender -eq 'Female' } | Select-Object -First 1 }",
+				"if (-not $v) { $say = '" + q(text.en()) + "'; $v = $all | Select-Object -First 1 }",
 				"if (-not $v) { exit 3 }",
 				"$s.SelectVoice($v.VoiceInfo.Name)",
 				"$s.Volume = " + volume.getInt(),
-				"$s.Speak('" + text.replace("'", "''") + "')");
+				"[Console]::Out.WriteLine('VOICE ' + $v.VoiceInfo.Name + ' ' + $v.VoiceInfo.Culture.Name)",
+				"$s.Speak($say)");
 		String encoded = Base64.getEncoder().encodeToString(script.getBytes(StandardCharsets.UTF_16LE));
 		Process p = new ProcessBuilder("powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
 				"-EncodedCommand", encoded).redirectErrorStream(true).start();
-		boolean finished = p.waitFor(wait ? 10 : 30, TimeUnit.SECONDS);
+		boolean finished = p.waitFor(wait ? 12 : 30, TimeUnit.SECONDS);
 		if (!finished) {
 			p.destroy();
+			NebulaClient.LOGGER.warn("Głos: PowerShell nie skończył mówić w czasie");
 			return;
 		}
+		String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
 		if (p.exitValue() == 3) {
-			NebulaClient.LOGGER.warn("Głos: w Windows nie ma rosyjskiego głosu (Ustawienia > Czas i język > Mowa > Dodaj głosy > rosyjski), "
-					+ "albo wrzuć własne pliki config/nebula/start.wav i stop.wav");
+			NebulaClient.LOGGER.warn("Głos: Windows nie ma żadnego głosu syntezatora (Ustawienia > Czas i język > Mowa), "
+					+ "wrzuć własne pliki config/nebula/start.wav i stop.wav");
+		} else if (p.exitValue() != 0) {
+			NebulaClient.LOGGER.warn("Głos: błąd PowerShell (kod {}): {}", p.exitValue(), out);
+		} else {
+			NebulaClient.LOGGER.info("Głos: {}", out.lines().filter(l -> l.startsWith("VOICE")).findFirst().orElse("ok"));
 		}
+	}
+
+	private static String q(String s) {
+		return s.replace("'", "''");
 	}
 }
