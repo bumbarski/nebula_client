@@ -72,7 +72,9 @@ for name, dest in [('NebulaClient.java', ''), ('LevelRendererMixin.java', 'mixin
 
 # warstwa zgodnosci: w 1.21.4 ekran jest w Minecraft.screen
 compat_dst = os.path.join(DST, 'src', 'main', 'java', 'dev', 'nebula', 'client', 'Compat.java')
-shutil.copy(os.path.join(SRC, 'src', 'compat', 'classic', 'java', 'dev', 'nebula', 'client', 'Compat.java'), compat_dst)
+ct = open(os.path.join(SRC, 'src', 'compat', 'classic', 'java', 'dev', 'nebula', 'client', 'Compat.java'), encoding='utf-8').read()
+ct = ct.replace('.position()', '.getPosition()').replace('.yRot()', '.getYRot()').replace('.xRot()', '.getXRot()')
+open(compat_dst, 'w', encoding='utf-8').write(ct)
 
 # build.gradle i gradle.properties dla starego Loom (z mapowaniami)
 open(os.path.join(DST, 'build.gradle'), 'w').write('''plugins {
