@@ -43,6 +43,15 @@ public final class Projector {
 				mc.options.fov().get(), mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
 	}
 
+	public double tanHalf() {
+		return tanHalf;
+	}
+
+	/** Kierunek patrzenia kamery (yaw w stopniach, jak w Minecrafcie). */
+	public float yawDeg() {
+		return (float) Math.toDegrees(Math.atan2(-fx, fz));
+	}
+
 	/** Zapisuje wspolrzedne ekranu do out[0], out[1]; false gdy punkt jest za kamera. */
 	public boolean toScreen(double x, double y, double z, double[] out) {
 		double dx = x - cx, dy = y - cy, dz = z - cz;

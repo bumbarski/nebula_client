@@ -4,6 +4,7 @@ import dev.nebula.client.module.impl.AppearanceModule;
 import dev.nebula.client.module.impl.ArmorModule;
 import dev.nebula.client.module.impl.BlockEspModule;
 import dev.nebula.client.module.impl.BlockOutlineModule;
+import dev.nebula.client.module.impl.SkyLyricsModule;
 import dev.nebula.client.module.impl.StorageEspModule;
 import dev.nebula.client.module.impl.SusChunkModule;
 import dev.nebula.client.module.impl.GammaModule;
@@ -53,6 +54,7 @@ public final class ModuleManager {
 		register(new PotionModule());
 		register(new ItemCooldownModule());
 		register(new MusicModule());
+		register(new SkyLyricsModule());
 
 		register(new AppearanceModule());
 		register(new WatermarkModule());

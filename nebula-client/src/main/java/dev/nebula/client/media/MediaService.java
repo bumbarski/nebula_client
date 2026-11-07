@@ -44,7 +44,20 @@ public final class MediaService {
 		return status;
 	}
 
-	public static synchronized void start() {
+	private static int users;
+
+	/** Kilka modulow moze korzystac z odczytu naraz: proces dziala, dopoki ktorykolwiek go potrzebuje. */
+	public static synchronized void acquire() {
+		users++;
+		start();
+	}
+
+	public static synchronized void release() {
+		if (users > 0) users--;
+		if (users == 0) stop();
+	}
+
+	private static synchronized void start() {
 		if (running) return;
 		if (!System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("win")) {
 			status = "Obsługiwane tylko na Windows";
@@ -58,7 +71,7 @@ public final class MediaService {
 		thread.start();
 	}
 
-	public static synchronized void stop() {
+	private static synchronized void stop() {
 		running = false;
 		destroyProcess();
 		current = null;

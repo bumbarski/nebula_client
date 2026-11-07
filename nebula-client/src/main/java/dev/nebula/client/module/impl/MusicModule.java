@@ -27,12 +27,12 @@ public final class MusicModule extends HudModule {
 
 	@Override
 	protected void onEnable() {
-		MediaService.start();
+		MediaService.acquire();
 	}
 
 	@Override
 	protected void onDisable() {
-		MediaService.stop();
+		MediaService.release();
 	}
 
 	@Override
