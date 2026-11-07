@@ -8,7 +8,8 @@ import os, re, shutil, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'nebula-client')
-DST = os.path.join(ROOT, 'nebula-client-1214')
+MC = sys.argv[1] if len(sys.argv) > 1 else '1.21.4'
+DST = os.path.join(ROOT, 'nebula-client-' + MC.replace('.', ''))
 TPL = os.path.join(ROOT, 'tools', 'port1214')
 
 if os.path.exists(DST):
@@ -119,16 +120,16 @@ java {
 open(os.path.join(DST, 'gradle.properties'), 'w').write('''org.gradle.jvmargs=-Xmx2G
 org.gradle.parallel=true
 
-minecraft_version=1.21.4
+minecraft_version=@MC@
 loader_version=0.16.14
 loom_version=1.14-SNAPSHOT
-minecraft_dep=~1.21.4
+minecraft_dep=~@MC@
 fabric_api_version=0.119.4+1.21.4
 
 mod_version=0.1.0
 maven_group=dev.nebula
 archives_base_name=nebula-client
-''')
+'''.replace('@MC@', MC))
 # fabric.mod.json: Java 21
 mj = os.path.join(DST, 'src', 'main', 'resources', 'fabric.mod.json')
 t = open(mj, encoding='utf-8').read().replace('">=25"', '">=21"').replace('">=0.19.3"', '">=0.16.0"')

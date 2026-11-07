@@ -26,28 +26,45 @@ jobs:
             compat: gui
             dir: nebula-client
             java: 25
+            loader: "0.19.3"
           - mc: "26.1.2"
             api: "0.155.3+26.1.2"
             dep: "~26.1"
             compat: classic
             dir: nebula-client
             java: 25
+            loader: "0.19.3"
           - mc: "1.21.4"
             api: "0.119.4+1.21.4"
             dep: "~1.21.4"
             compat: classic
             dir: nebula-client-1214
             java: 21
+            loader: "0.16.14"
+          - mc: "1.21.11"
+            api: "AUTO"
+            dep: "~1.21.11"
+            compat: classic
+            dir: nebula-client-12111
+            java: 21
+            loader: "0.18.1"
     defaults:
       run:
         working-directory: ${{ matrix.dir }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Wygeneruj projekt dla 1.21.4
-        if: matrix.dir == 'nebula-client-1214'
+      - name: Wygeneruj projekt dla starszych wersji
+        if: matrix.dir != 'nebula-client'
         working-directory: .
-        run: python3 tools/port_1214.py
+        run: python3 tools/port_1214.py ${{ matrix.mc }}
+
+      - name: Znajdz Fabric API
+        if: matrix.api == 'AUTO'
+        working-directory: .
+        run: |
+          V=$(curl -s https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml | grep -oE "<version>[^<]*\+${{ matrix.mc }}</version>" | sed 's/<[^>]*>//g' | tail -1)
+          echo "FABRIC_API=$V" >> $GITHUB_ENV
 
       - uses: actions/setup-java@v5
         with:
@@ -59,12 +76,12 @@ jobs:
           gradle-version: 9.5.1
 
       - name: Build
-        run: gradle build --console=plain --stacktrace -Pminecraft_version=${{ matrix.mc }} -Pfabric_api_version="${{ matrix.api }}" "-Pminecraft_dep=${{ matrix.dep }}" -Pcompat=${{ matrix.compat }} -Pmod_version=0.1.0-mc${{ matrix.mc }} > build.log 2>&1
+        run: gradle build --console=plain --stacktrace -Pminecraft_version=${{ matrix.mc }} -Pfabric_api_version="${{ matrix.api == 'AUTO' && env.FABRIC_API || matrix.api }}" -Ploader_version=${{ matrix.loader }} "-Pminecraft_dep=${{ matrix.dep }}" -Pcompat=${{ matrix.compat }} -Pmod_version=0.1.0-mc${{ matrix.mc }} > build.log 2>&1
 
       - name: Pokaż błędy builda
         if: failure()
         run: |
-          grep -nE "error:|FAILED|What went wrong|Caused by|Could not|not found|Unsupported" -A3 build.log | head -c 3500 > err.txt || true
+          { grep -E "error:|symbol:|What went wrong|Could not" build.log | sed 's#.*/dev/nebula/client/##' | head -c 3400; } > err.txt || true
           node ../launcher/test/annotate.js err.txt "Błędy builda ${{ matrix.mc }}" error 3600
 
       - name: Przygotuj jar do wydania
