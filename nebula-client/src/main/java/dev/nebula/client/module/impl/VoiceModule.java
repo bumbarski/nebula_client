@@ -22,8 +22,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Glosowe powitanie przy starcie gry i pozegnanie przy zamknieciu.
- * Najpierw szuka wlasnych plikow config/nebula/start.wav i stop.wav, a jesli ich nie ma,
- * czyta tekst glosem systemowym Windows (rosyjski glos zenski, np. Microsoft Irina).
+ * Najpierw szuka wlasnych plikow config/nebula/start.wav i stop.wav, potem nagran wbudowanych w jar
+ * (assets/nebula/voice/*.wav), a jesli ich nie ma, czyta tekst glosem systemowym Windows (rosyjski glos zenski, np. Microsoft Irina).
  */
 public final class VoiceModule extends Module {
 	/** Tekst po rosyjsku oraz zapis fonetyczny dla glosow bez rosyjskiego (polskie i angielskie). */
@@ -60,8 +60,17 @@ public final class VoiceModule extends Module {
 	private void play(String name, Phrase text, boolean wait) {
 		try {
 			Path custom = FabricLoader.getInstance().getConfigDir().resolve("nebula").resolve(name + ".wav");
+			java.io.InputStream bundled = VoiceModule.class.getResourceAsStream("/assets/nebula/voice/" + name + ".wav");
 			if (Files.isRegularFile(custom)) {
-				playWav(custom, wait);
+				if (bundled != null) bundled.close();
+				try (AudioInputStream in = AudioSystem.getAudioInputStream(custom.toFile())) {
+					playStream(in, wait);
+				}
+			} else if (bundled != null) {
+				try (java.io.InputStream raw = new java.io.BufferedInputStream(bundled);
+					 AudioInputStream in = AudioSystem.getAudioInputStream(raw)) {
+					playStream(in, wait);
+				}
 			} else if (System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("win")) {
 				speakWindows(text, wait);
 			} else {
@@ -72,8 +81,8 @@ public final class VoiceModule extends Module {
 		}
 	}
 
-	private void playWav(Path file, boolean wait) throws Exception {
-		try (AudioInputStream in = AudioSystem.getAudioInputStream(file.toFile())) {
+	private void playStream(AudioInputStream in, boolean wait) throws Exception {
+		{
 			Clip clip = AudioSystem.getClip();
 			clip.open(in);
 			if (clip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
