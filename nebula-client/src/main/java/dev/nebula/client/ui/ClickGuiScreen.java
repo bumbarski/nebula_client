@@ -9,6 +9,7 @@ import dev.nebula.client.setting.BoolSetting;
 import dev.nebula.client.setting.ModeSetting;
 import dev.nebula.client.setting.NumberSetting;
 import dev.nebula.client.setting.Setting;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
@@ -36,6 +37,7 @@ public final class ClickGuiScreen extends Screen {
 	// wybrana zakladka i rozwiniecia przezywaja zamkniecie menu
 	private static int tab = 0;
 	private static final Set<Module> EXPANDED = new HashSet<>();
+	private static boolean blurBroken;
 
 	private static final int CARD = 0xFF1E1E2B;
 	private static final int CARD_HOVER = 0xFF262637;
@@ -100,8 +102,14 @@ public final class ClickGuiScreen extends Screen {
 
 		hits.clear();
 
-		if (Theme.glass() && Theme.blur()) {
-			extractBlurredBackground(g);
+		// rozmycie tla pomijamy z Irisem (shadery zmieniaja potok renderowania) i po pierwszym bledzie
+		if (Theme.glass() && Theme.blur() && !blurBroken && !FabricLoader.getInstance().isModLoaded("iris")) {
+			try {
+				extractBlurredBackground(g);
+			} catch (Throwable t) {
+				blurBroken = true;
+				NebulaClient.LOGGER.warn("Rozmycie tła menu wyłączone po błędzie: {}", t.toString());
+			}
 		}
 		Gfx.gradient(g, 0, 0, width, height,
 				Gfx.alpha(0xFF05050A, (Theme.glass() ? 0.28f : 0.50f) * a),
