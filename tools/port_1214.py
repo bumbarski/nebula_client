@@ -176,7 +176,7 @@ if MC == '1.21.11':
     bg = os.path.join(DST, 'build.gradle')
     t = open(bg, encoding='utf-8').read()
     t = t.replace('modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"',
-                  'modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"\n\tmodCompileOnly files("libs/lyricsflow.jar")', 1)
+                  'modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"\n\tcompileOnly files("libs/lyricsflow.jar")', 1)
     assert 'libs/lyricsflow.jar' in t
     open(bg, 'w', encoding='utf-8').write(t)
     cg = os.path.join(JAVA, 'module', 'Category.java')
