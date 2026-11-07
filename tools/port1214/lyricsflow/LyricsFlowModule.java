@@ -2,7 +2,6 @@ package dev.nebula.client.module.impl;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.lyricsflow.app.Core;
-import dev.lyricsflow.app.cosmetic.PhoneMenu;
 import dev.lyricsflow.config.ConfigManager;
 import dev.lyricsflow.config.LFConfig;
 import dev.lyricsflow.render.Themes;
@@ -66,7 +65,13 @@ public final class LyricsFlowModule extends Module {
 			if (dev.nebula.client.Compat.screen(mc) != null || mc.player == null) continue;
 			try {
 				Core.cfg().menuMode = 1;
-				PhoneMenu.open(mc);
+				// refleksja: PhoneMenu.open przyjmuje typ Minecraft w nazwach produkcyjnych, ktorych nie ma przy kompilacji
+				for (java.lang.reflect.Method m : Class.forName("dev.lyricsflow.app.cosmetic.PhoneMenu").getMethods()) {
+					if (m.getName().equals("open") && m.getParameterCount() == 1) {
+						m.invoke(null, mc);
+						break;
+					}
+				}
 			} catch (Throwable ignored) {
 				// panel nie jest krytyczny
 			}
