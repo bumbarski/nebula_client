@@ -1,5 +1,8 @@
 package dev.nebula.client.module.impl;
 
+import com.mojang.blaze3d.platform.InputConstants;
+import dev.lyricsflow.app.Core;
+import dev.lyricsflow.app.cosmetic.PhoneMenu;
 import dev.lyricsflow.config.ConfigManager;
 import dev.lyricsflow.config.LFConfig;
 import dev.lyricsflow.render.Themes;
@@ -8,7 +11,10 @@ import dev.nebula.client.module.Module;
 import dev.nebula.client.setting.BoolSetting;
 import dev.nebula.client.setting.ModeSetting;
 import dev.nebula.client.setting.NumberSetting;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.Identifier;
 
 /**
  * Zakladka "Spotify" (tylko 1.21.11): ustawienia modu LyricsFlow (autor: 374m / cmonmanx, uzyty za jego zgoda),
@@ -36,11 +42,16 @@ public final class LyricsFlowModule extends Module {
 	private final BoolSetting fps = add(new BoolSetting("FPS przy pasku", false));
 	private final NumberSetting offset = add(new NumberSetting("Przesunięcie tekstu (ms)", -2000, 2000, 0, 50));
 
+	private final BoolSetting worldMenu = add(new BoolSetting("Menu Spotify jako panel w świecie (jak Vision Pro)", true));
+
 	private String applied = "";
+	private final KeyMapping panelKey;
 
 	public LyricsFlowModule() {
 		super("spotify", "Spotify i teksty", "Tekst piosenki na niebie i pasek muzyki (mod LyricsFlow, autor 374m)", Category.SPOTIFY, true);
 		this.toggleable = false;
+		KeyMapping.Category cat = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("nebula", "spotify"));
+		panelKey = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.nebula.world_panel", InputConstants.Type.KEYSYM, InputConstants.KEY_P, cat));
 	}
 
 	private static int indexOf(String id) {
@@ -50,6 +61,16 @@ public final class LyricsFlowModule extends Module {
 
 	@Override
 	public void onTick(Minecraft mc) {
+		// klawisz P: stawia panel sterowania Spotify w swiecie przed toba (kliknij go celownikiem)
+		while (panelKey.consumeClick()) {
+			if (dev.nebula.client.Compat.screen(mc) != null || mc.player == null) continue;
+			try {
+				Core.cfg().menuMode = 1;
+				PhoneMenu.open(mc);
+			} catch (Throwable ignored) {
+				// panel nie jest krytyczny
+			}
+		}
 		LFConfig c;
 		try {
 			c = ConfigManager.get();
@@ -59,7 +80,7 @@ public final class LyricsFlowModule extends Module {
 		if (c == null) return;
 		String sig = on.value + "|" + lyrics.value + "|" + style.index() + "|" + scale.get() + "|" + opacity.get() + "|" + glow.value
 				+ "|" + beat.value + "|" + caps.value + "|" + theme.index() + "|" + fx.value + "|" + bar.value + "|" + barStyle.index()
-				+ "|" + barScale.get() + "|" + barY.get() + "|" + clock.value + "|" + ping.value + "|" + fps.value + "|" + offset.getInt();
+				+ "|" + barScale.get() + "|" + barY.get() + "|" + clock.value + "|" + ping.value + "|" + fps.value + "|" + offset.getInt() + "|" + worldMenu.value;
 		if (sig.equals(applied)) return;
 		applied = sig;
 
@@ -88,6 +109,12 @@ public final class LyricsFlowModule extends Module {
 		c.ping = ping.value;
 		c.fps = fps.value;
 		c.syncOffsetMs = offset.getInt();
+		try {
+			Core.cfg().menuMode = worldMenu.value ? 1 : 0;
+			Core.saveConfig();
+		} catch (Throwable ignored) {
+			// konfiguracja panelu zostanie ustawiona przy nastepnej zmianie
+		}
 		try {
 			ConfigManager.save();
 		} catch (Throwable ignored) {
