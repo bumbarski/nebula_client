@@ -87,7 +87,7 @@ jobs:
       - name: Sonda mixinow 1.21.11 (tymczasowa)
         if: always() && matrix.mc == '1.21.11'
         run: |
-          JAR=$(find ~/.gradle /home/runner/work -name '*.jar' 2>/dev/null | grep '/minecraft-merged/' | grep -v sources | head -1)
+          JAR=$(find ~/.gradle /home/runner/work -name '*.jar' 2>/dev/null | grep '/minecraft-merged/1.21.11' | grep -v sources | head -1)
           sig() { javap -p -cp "$JAR" "$1" 2>&1 | grep -E "$2" | grep -v lambda | sed 's/net\.minecraft\.//g' | head -${3:-8}; }
           {
             echo "JAR: $JAR"
