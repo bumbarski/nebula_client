@@ -17,7 +17,7 @@ Ten sam plik budują się automatycznie przy każdej zmianie w repo (zakładka A
 
 ### Wersje Minecrafta
 
-Nebula Client jest budowana dla **26.2**, **26.1.2** i **1.21.4**. Launcher sam pobiera jar pasujący do wersji gry wybranej w instalacji (dla innych wersji Nebula jest pomijana z ostrzeżeniem).
+Nebula Client jest budowana dla **26.2**, **26.1.2**, **1.21.11** i **1.21.4**. Launcher sam pobiera jar pasujący do wersji gry wybranej w instalacji (dla innych wersji Nebula jest pomijana z ostrzeżeniem).
 
 ### Paczka modów
 
