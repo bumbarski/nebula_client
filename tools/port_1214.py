@@ -147,5 +147,26 @@ archives_base_name=nebula-client
 mj = os.path.join(DST, 'src', 'main', 'resources', 'fabric.mod.json')
 t = open(mj, encoding='utf-8').read().replace('">=25"', '">=21"').replace('">=0.19.3"', '">=0.16.0"')
 open(mj, 'w', encoding='utf-8').write(t)
+
+# 1.21.11: tekst na niebie i pasek Spotify = oryginalny mod LyricsFlow (374m, za zgoda), wbudowany jako jar-in-jar
+if MC == '1.21.11':
+    import json
+    LF = os.path.join(TPL, 'lyricsflow')
+    for f in ('module/impl/MusicModule.java', 'module/impl/SkyLyricsModule.java'):
+        os.remove(os.path.join(JAVA, f))
+    mm = os.path.join(JAVA, 'module', 'ModuleManager.java')
+    t = open(mm, encoding='utf-8').read()
+    t = re.sub(r'\n\s*register\(new (MusicModule|SkyLyricsModule)\(\)\);', '', t)
+    t = re.sub(r'import dev\.nebula\.client\.module\.impl\.(MusicModule|SkyLyricsModule);\n', '', t)
+    open(mm, 'w', encoding='utf-8').write(t)
+    jars = os.path.join(DST, 'src', 'main', 'resources', 'META-INF', 'jars')
+    os.makedirs(jars, exist_ok=True)
+    shutil.copy(os.path.join(LF, 'lyricsflow.jar'), os.path.join(jars, 'lyricsflow.jar'))
+    shutil.copy(os.path.join(LF, 'NebulaPreLaunch.java'), os.path.join(JAVA, 'NebulaPreLaunch.java'))
+    mj2 = os.path.join(DST, 'src', 'main', 'resources', 'fabric.mod.json')
+    d = json.load(open(mj2, encoding='utf-8'))
+    d['jars'] = [{'file': 'META-INF/jars/lyricsflow.jar'}]
+    d['entrypoints']['preLaunch'] = ['dev.nebula.client.NebulaPreLaunch']
+    json.dump(d, open(mj2, 'w', encoding='utf-8'), indent=2)
 # mixin: bez mixinow z width (brak parametru) - ich brak jest bezpieczny dzieki defaultRequire 0
 print('OK: wygenerowano', DST)
