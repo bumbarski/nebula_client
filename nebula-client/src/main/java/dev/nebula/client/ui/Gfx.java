@@ -80,6 +80,20 @@ public final class Gfx {
 		g.pose().popMatrix();
 	}
 
+	/** Przesuniecie do (x1, y1), obrot o rot (rad) i skala (sx, sy); trzeba zakonczyc popScale. */
+	public static void pushXform(GuiGraphicsExtractor g, float x1, float y1, float rot, float sx, float sy) {
+		g.pose().pushMatrix();
+		g.pose().translate(x1, y1);
+		g.pose().rotate(rot);
+		g.pose().scale(sx, sy);
+	}
+
+	/** Kolko o srodku (cx, cy) i promieniu r. */
+	public static void circle(GuiGraphicsExtractor g, float cx, float cy, float r, int color) {
+		int d = Math.max(2, Math.round(r * 2f));
+		roundRect(g, Math.round(cx - d / 2f), Math.round(cy - d / 2f), d, d, d / 2, color);
+	}
+
 	/**
 	 * Tlo elementu HUD/okna: w stylu "Szklo" przezroczysta ciemna tafla z jasnym polyskiem u gory
 	 * i cienka krawedzia, w stylu "Ciemny" zwykle zaokraglone tlo.

@@ -52,6 +52,11 @@ public final class Projector {
 		return (float) Math.toDegrees(Math.atan2(-fx, fz));
 	}
 
+	/** Pochylenie kamery w stopniach (jak w Minecrafcie: dodatnie = patrzy w dol). */
+	public float pitchDeg() {
+		return (float) Math.toDegrees(Math.asin(Math.max(-1.0, Math.min(1.0, -fy))));
+	}
+
 	/** Zapisuje wspolrzedne ekranu do out[0], out[1]; false gdy punkt jest za kamera. */
 	public boolean toScreen(double x, double y, double z, double[] out) {
 		double dx = x - cx, dy = y - cy, dz = z - cz;
