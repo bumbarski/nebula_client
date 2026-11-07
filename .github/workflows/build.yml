@@ -81,7 +81,7 @@ jobs:
       - name: Pokaż błędy builda
         if: failure()
         run: |
-          { grep -E "error:|symbol:|What went wrong|Could not" build.log | sed 's#.*/dev/nebula/client/##' | head -c 3400; } > err.txt || true
+          { grep -E -A3 "error:|symbol:|What went wrong|Could not" build.log | sed 's#.*/dev/nebula/client/##' | head -c 3400; } > err.txt || true
           node ../launcher/test/annotate.js err.txt "Błędy builda ${{ matrix.mc }}" error 3600
 
       - name: Przygotuj jar do wydania
