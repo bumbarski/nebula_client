@@ -11,6 +11,9 @@ import dev.nebula.client.setting.NumberSetting;
 import dev.nebula.client.setting.Setting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -98,7 +101,7 @@ public final class ClickGuiScreen extends Screen {
 		hits.clear();
 
 		if (Theme.glass() && Theme.blur()) {
-			renderBlurredBackground();
+			renderBlurredBackground(g);
 		}
 		Gfx.gradient(g, 0, 0, width, height,
 				Gfx.alpha(0xFF05050A, (Theme.glass() ? 0.28f : 0.50f) * a),
@@ -381,10 +384,10 @@ public final class ClickGuiScreen extends Screen {
 	// ---------------------------------------------------------------- wejscie
 
 	@Override
-	public boolean mouseClicked(double ex, double ey, int eb) {
-		double mx = ex;
-		double my = ey;
-		int button = eb;
+	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+		double mx = event.x();
+		double my = event.y();
+		int button = event.button();
 
 		for (int i = hits.size() - 1; i >= 0; i--) {
 			Hit hit = hits.get(i);
@@ -403,24 +406,24 @@ public final class ClickGuiScreen extends Screen {
 			}
 			return true;
 		}
-		return super.mouseClicked(ex, ey, eb);
+		return super.mouseClicked(event, doubleClick);
 	}
 
 	@Override
-	public boolean mouseDragged(double ex, double ey, int eb, double dragX, double dragY) {
+	public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
 		if (activeSlider != null) {
-			updateSlider(ex);
+			updateSlider(event.x());
 			return true;
 		}
-		return super.mouseDragged(ex, ey, eb, dragX, dragY);
+		return super.mouseDragged(event, dragX, dragY);
 	}
 
 	@Override
-	public boolean mouseReleased(double ex, double ey, int eb) {
+	public boolean mouseReleased(MouseButtonEvent event) {
 		boolean changed = activeSlider != null;
 		activeSlider = null;
 		if (changed) ConfigManager.save(NebulaClient.modules());
-		return changed || super.mouseReleased(ex, ey, eb);
+		return changed || super.mouseReleased(event);
 	}
 
 	@Override
@@ -438,29 +441,29 @@ public final class ClickGuiScreen extends Screen {
 	}
 
 	@Override
-	public boolean charTyped(char chr, int mods) {
-		if (net.minecraft.util.StringUtil.isAllowedChatCharacter(chr) && query.length() < 24) {
-			query += String.valueOf(chr);
+	public boolean charTyped(CharacterEvent event) {
+		if (event.isAllowedChatCharacter() && query.length() < 24) {
+			query += event.codepointAsString();
 			scroll = 0;
 			scrollTarget = 0;
 			return true;
 		}
-		return super.charTyped(chr, mods);
+		return super.charTyped(event);
 	}
 
 	@Override
-	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-		if (keyCode == InputConstants.KEY_RSHIFT) {
+	public boolean keyPressed(KeyEvent event) {
+		if (event.key() == InputConstants.KEY_RSHIFT) {
 			onClose();
 			return true;
 		}
-		if (keyCode == InputConstants.KEY_BACKSPACE && !query.isEmpty()) {
+		if (event.key() == InputConstants.KEY_BACKSPACE && !query.isEmpty()) {
 			query = query.substring(0, query.length() - 1);
 			scroll = 0;
 			scrollTarget = 0;
 			return true;
 		}
-		return super.keyPressed(keyCode, scanCode, modifiers);
+		return super.keyPressed(event);
 	}
 
 	@Override

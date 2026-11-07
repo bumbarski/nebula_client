@@ -72,12 +72,12 @@ public final class Gfx {
 
 	/** Zaczyna rysowanie w skali s (kazde pushScale musi miec popScale). */
 	public static void pushScale(GuiGraphics g, float s) {
-		g.pose().pushPose();
-		g.pose().scale(s, s, 1f);
+		g.pose().pushMatrix();
+		g.pose().scale(s, s);
 	}
 
 	public static void popScale(GuiGraphics g) {
-		g.pose().popPose();
+		g.pose().popMatrix();
 	}
 
 	/**
@@ -131,11 +131,11 @@ public final class Gfx {
 			g.fill(px, Math.round(Math.min(y1, y2)), px + 1, Math.round(Math.max(y1, y2)) + 1, color);
 			return;
 		}
-		g.pose().pushPose();
-		g.pose().translate(x1, y1, 0f);
-		g.pose().mulPose(new org.joml.Quaternionf().rotateZ((float) Math.atan2(dy, dx)));
+		g.pose().pushMatrix();
+		g.pose().translate(x1, y1);
+		g.pose().rotate((float) Math.atan2(dy, dx));
 		g.fill(0, 0, Math.max(1, Math.round(len)), 1, color);
-		g.pose().popPose();
+		g.pose().popMatrix();
 	}
 
 	/** Skraca tekst do szerokosci maxW (w pikselach), dodajac "...". */

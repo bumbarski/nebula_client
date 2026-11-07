@@ -5,7 +5,7 @@ import com.mojang.math.Axis;
 import dev.nebula.client.module.impl.ViewModelModule;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemStack;
@@ -16,9 +16,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ItemInHandRenderer.class)
 public abstract class ItemInHandRendererMixin {
-	@Inject(method = "renderArmWithItem", at = @At("HEAD"))
+	@Inject(method = {"submitArmWithItem", "renderArmWithItem"}, at = @At("HEAD"))
 	private void nebula$before(AbstractClientPlayer player, float a, float b, InteractionHand hand, float c,
-							   ItemStack stack, float d, PoseStack pose, MultiBufferSource buffers, int light,
+							   ItemStack stack, float d, PoseStack pose, SubmitNodeCollector collector, int light,
 							   CallbackInfo ci) {
 		ViewModelModule m = ViewModelModule.instance;
 		if (m == null || !m.isEnabled()) return;
@@ -33,9 +33,9 @@ public abstract class ItemInHandRendererMixin {
 		pose.mulPose(Axis.ZP.rotationDegrees(m.rotZ.getFloat() * side));
 	}
 
-	@Inject(method = "renderArmWithItem", at = @At("RETURN"))
+	@Inject(method = {"submitArmWithItem", "renderArmWithItem"}, at = @At("RETURN"))
 	private void nebula$after(AbstractClientPlayer player, float a, float b, InteractionHand hand, float c,
-							  ItemStack stack, float d, PoseStack pose, MultiBufferSource buffers, int light,
+							  ItemStack stack, float d, PoseStack pose, SubmitNodeCollector collector, int light,
 							  CallbackInfo ci) {
 		ViewModelModule m = ViewModelModule.instance;
 		if (m == null || !m.isEnabled()) return;

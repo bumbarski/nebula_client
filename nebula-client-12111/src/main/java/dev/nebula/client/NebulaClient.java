@@ -9,8 +9,10 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,15 +32,21 @@ public final class NebulaClient implements ClientModInitializer {
 		modules = new ModuleManager();
 		ConfigManager.load(modules);
 
-		String category = "key.category.nebula.main";
+		// Klawisz otwierajacy menu: domyslnie Prawy Shift (do zmiany w Sterowaniu)
+		KeyMapping.Category category = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(MOD_ID, "main"));
 		openGuiKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
-				"key.nebula.open_gui", InputConstants.Type.KEYSYM, InputConstants.KEY_RSHIFT, category));
+				"key.nebula.open_gui",
+				InputConstants.Type.KEYSYM,
+				InputConstants.KEY_RSHIFT,
+				category
+		));
+
 		modules.freelook().registerKey(category);
 
 		ClientTickEvents.END_CLIENT_TICK.register(mc -> {
 			while (openGuiKey.consumeClick()) {
-				if (mc.player != null && Compat.screen(mc) == null) {
-					Compat.setScreen(mc, new ClickGuiScreen());
+				if (mc.player != null && dev.nebula.client.Compat.screen(mc) == null) {
+					dev.nebula.client.Compat.setScreen(mc, new ClickGuiScreen());
 				}
 			}
 			if (mc.player != null) {
@@ -46,7 +54,12 @@ public final class NebulaClient implements ClientModInitializer {
 			}
 		});
 
-		HudRenderCallback.EVENT.register((graphics, tickCounter) -> HudManager.render(graphics));
+		// HUD rysowany tuz przed czatem
+		HudElementRegistry.attachElementBefore(
+				VanillaHudElements.CHAT,
+				Identifier.fromNamespaceAndPath(MOD_ID, "hud"),
+				(graphics, deltaTracker) -> HudManager.render(graphics)
+		);
 
 		ClientLifecycleEvents.CLIENT_STARTED.register(mc -> modules.voice().greet());
 		ClientLifecycleEvents.CLIENT_STOPPING.register(mc -> {

@@ -18,24 +18,15 @@ shutil.copytree(SRC, DST, ignore=shutil.ignore_patterns('build', '.gradle', '*.l
 
 JAVA = os.path.join(DST, 'src', 'main', 'java', 'dev', 'nebula', 'client')
 
-def sub(text, pairs):
-    for a, b in pairs:
-        text = re.sub(a, b, text, flags=re.S)
-    return text
+OLD = MC.startswith('1.21.4')
 
-for dp, _, files in os.walk(os.path.join(DST, 'src', 'main', 'java')):
-    for f in files:
-        if not f.endswith('.java'):
-            continue
-        p = os.path.join(dp, f)
-        t = open(p, encoding='utf-8').read()
-        t = sub(t, [
-            (r'GuiGraphicsExtractor', 'GuiGraphics'),
-            (r'\bg\.outline\(', 'g.renderOutline('),
-            (r'\bg\.text\(', 'g.drawString('),
-            (r'\bg\.item\(', 'g.renderItem('),
-            (r'\bg\.itemDecorations\(', 'g.renderItemDecorations('),
-            (r'public void extractRenderState\(', 'public void render('),
+MID_RULES = [
+    (r'extractBlurredBackground\(g\)', 'renderBlurredBackground(g)'),
+    (r'net\.fabricmc\.fabric\.api\.client\.keymapping\.v1\.KeyMappingHelper', 'net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper'),
+    (r'KeyMappingHelper\.registerKeyMapping\(', 'KeyBindingHelper.registerKeyBinding('),
+]
+
+OLD_RULES = [
             (r'extractBlurredBackground\(g\)', 'renderBlurredBackground()'),
             (r'g\.pose\(\)\.pushMatrix\(\)', 'g.pose().pushPose()'),
             (r'g\.pose\(\)\.popMatrix\(\)', 'g.pose().popPose()'),
@@ -64,17 +55,38 @@ for dp, _, files in os.walk(os.path.join(DST, 'src', 'main', 'java')):
             (r'net\.fabricmc\.fabric\.api\.client\.keymapping\.v1\.KeyMappingHelper', 'net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper'),
             (r'KeyMappingHelper\.registerKeyMapping\(', 'KeyBindingHelper.registerKeyBinding('),
             (r'registerKey\(KeyMapping\.Category category\)', 'registerKey(String category)'),
-        ])
+]
+
+def sub(text, pairs):
+    for a, b in pairs:
+        text = re.sub(a, b, text, flags=re.S)
+    return text
+
+for dp, _, files in os.walk(os.path.join(DST, 'src', 'main', 'java')):
+    for f in files:
+        if not f.endswith('.java'):
+            continue
+        p = os.path.join(dp, f)
+        t = open(p, encoding='utf-8').read()
+        t = sub(t, [
+            (r'GuiGraphicsExtractor', 'GuiGraphics'),
+            (r'\bg\.outline\(', 'g.renderOutline('),
+            (r'\bg\.text\(', 'g.drawString('),
+            (r'\bg\.item\(', 'g.renderItem('),
+            (r'\bg\.itemDecorations\(', 'g.renderItemDecorations('),
+            (r'public void extractRenderState\(', 'public void render('),
+        ] + (OLD_RULES if OLD else MID_RULES))
         open(p, 'w', encoding='utf-8').write(t)
 
 # pliki, ktore w 1.21.4 wygladaja inaczej
-for name, dest in [('NebulaClient.java', ''), ('LevelRendererMixin.java', 'mixin'), ('ItemInHandRendererMixin.java', 'mixin')]:
+for name, dest in ([('NebulaClient.java', ''), ('LevelRendererMixin.java', 'mixin'), ('ItemInHandRendererMixin.java', 'mixin')] if OLD else []):
     shutil.copy(os.path.join(TPL, name), os.path.join(JAVA, dest, name))
 
 # warstwa zgodnosci: w 1.21.4 ekran jest w Minecraft.screen
 compat_dst = os.path.join(DST, 'src', 'main', 'java', 'dev', 'nebula', 'client', 'Compat.java')
 ct = open(os.path.join(SRC, 'src', 'compat', 'classic', 'java', 'dev', 'nebula', 'client', 'Compat.java'), encoding='utf-8').read()
-ct = ct.replace('.position()', '.getPosition()').replace('.yRot()', '.getYRot()').replace('.xRot()', '.getXRot()')
+if OLD:
+    ct = ct.replace('.position()', '.getPosition()').replace('.yRot()', '.getYRot()').replace('.xRot()', '.getXRot()')
 open(compat_dst, 'w', encoding='utf-8').write(ct)
 
 # build.gradle i gradle.properties dla starego Loom (z mapowaniami)

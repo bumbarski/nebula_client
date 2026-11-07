@@ -10,15 +10,15 @@ public final class Compat {
 	}
 
 	public static Vec3 cameraPos(Minecraft mc) {
-		return mc.gameRenderer.getMainCamera().getPosition();
+		return mc.gameRenderer.getMainCamera().position();
 	}
 
 	public static float cameraYaw(Minecraft mc) {
-		return mc.gameRenderer.getMainCamera().getYRot();
+		return mc.gameRenderer.getMainCamera().yRot();
 	}
 
 	public static float cameraPitch(Minecraft mc) {
-		return mc.gameRenderer.getMainCamera().getXRot();
+		return mc.gameRenderer.getMainCamera().xRot();
 	}
 
 	public static Screen screen(Minecraft mc) {

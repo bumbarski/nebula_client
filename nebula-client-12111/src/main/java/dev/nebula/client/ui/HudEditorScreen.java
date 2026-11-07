@@ -6,6 +6,7 @@ import dev.nebula.client.hud.HudManager;
 import dev.nebula.client.module.HudModule;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 import java.util.List;
@@ -68,29 +69,29 @@ public final class HudEditorScreen extends Screen {
 	}
 
 	@Override
-	public boolean mouseClicked(double ex, double ey, int eb) {
-		if (eb == 0) {
+	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+		if (event.button() == 0) {
 			List<HudModule> all = NebulaClient.modules().hud();
 			// od gory (ostatnio narysowany) do dolu
 			for (int i = all.size() - 1; i >= 0; i--) {
 				HudModule m = all.get(i);
-				if (m.isEnabled() && m.w > 0 && isInside(m, ex, ey)) {
+				if (m.isEnabled() && m.w > 0 && isInside(m, event.x(), event.y())) {
 					dragging = m;
-					dragOffX = (int) ex - m.x;
-					dragOffY = (int) ey - m.y;
+					dragOffX = (int) event.x() - m.x;
+					dragOffY = (int) event.y() - m.y;
 					return true;
 				}
 			}
 		}
-		return super.mouseClicked(ex, ey, eb);
+		return super.mouseClicked(event, doubleClick);
 	}
 
 	@Override
-	public boolean mouseDragged(double ex, double ey, int eb, double dragX, double dragY) {
-		if (dragging == null) return super.mouseDragged(ex, ey, eb, dragX, dragY);
+	public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+		if (dragging == null) return super.mouseDragged(event, dragX, dragY);
 
-		int nx = (int) ex - dragOffX;
-		int ny = (int) ey - dragOffY;
+		int nx = (int) event.x() - dragOffX;
+		int ny = (int) event.y() - dragOffY;
 
 		nx = snap(nx, dragging.w, width);
 		ny = snap(ny, dragging.h, height);
@@ -109,11 +110,11 @@ public final class HudEditorScreen extends Screen {
 	}
 
 	@Override
-	public boolean mouseReleased(double ex, double ey, int eb) {
+	public boolean mouseReleased(MouseButtonEvent event) {
 		boolean was = dragging != null;
 		dragging = null;
 		if (was) ConfigManager.save(NebulaClient.modules());
-		return was || super.mouseReleased(ex, ey, eb);
+		return was || super.mouseReleased(event);
 	}
 
 	@Override

@@ -27,7 +27,7 @@ public final class FreelookModule extends Module {
 		super("freelook", "Free look", "Obracasz kamerę jak w F5, a postać idzie dalej prosto", Category.GAME, true);
 	}
 
-	public void registerKey(String category) {
+	public void registerKey(KeyMapping.Category category) {
 		key = KeyBindingHelper.registerKeyBinding(
 				new KeyMapping("key.nebula.freelook", InputConstants.Type.KEYSYM, InputConstants.KEY_LALT, category));
 	}
