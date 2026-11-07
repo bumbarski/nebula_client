@@ -84,6 +84,20 @@ jobs:
           { grep -E "error:|symbol:|What went wrong|Could not" build.log | sed 's#.*/dev/nebula/client/##' | head -c 3400; } > err.txt || true
           node ../launcher/test/annotate.js err.txt "Błędy builda ${{ matrix.mc }}" error 3600
 
+      - name: Sonda mixinow 1.21.11 (tymczasowa)
+        if: always() && matrix.mc == '1.21.11'
+        run: |
+          JAR=$(find ~/.gradle /home/runner/work -name '*.jar' 2>/dev/null | grep '/minecraft-merged/' | grep -v sources | head -1)
+          sig() { javap -p -cp "$JAR" "$1" 2>&1 | grep -E "$2" | grep -v lambda | sed 's/net\.minecraft\.//g' | head -${3:-8}; }
+          {
+            echo "JAR: $JAR"
+            sig net.minecraft.client.renderer.LevelRenderer 'HitOutline|BlockOutline' 6
+            sig net.minecraft.client.renderer.ItemInHandRenderer 'ArmWithItem' 4
+            sig net.minecraft.client.Camera 'setRotation' 2
+            sig net.minecraft.world.entity.Entity 'void turn' 2
+          } > m.txt
+          node ../launcher/test/annotate.js m.txt "Sonda 1.21.11" notice 3000
+
       - name: Przygotuj jar do wydania
         run: |
           mkdir -p ../dist-mod
