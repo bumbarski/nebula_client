@@ -75,6 +75,15 @@ public final class ModuleManager {
 		register(new dev.nebula.client.module.impl.ChestStealerModule());
 		register(new dev.nebula.client.module.impl.SpammerModule());
 
+		register(new dev.nebula.client.module.impl.CriticalsModule());
+		register(new dev.nebula.client.module.impl.OffHandModule());
+		register(new dev.nebula.client.module.impl.AntiAimModule());
+		register(new dev.nebula.client.module.impl.NoDelayModule());
+		register(new dev.nebula.client.module.impl.AutoToolModule());
+		register(new dev.nebula.client.module.impl.SpeedMineModule());
+		register(new dev.nebula.client.module.impl.AutoEzModule());
+		register(new dev.nebula.client.module.impl.NameProtectModule());
+
 		register(freelook);
 		register(voice);
 		register(new ToggleKeysModule());
