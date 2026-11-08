@@ -59,6 +59,34 @@ public final class ClickGuiScreen extends Screen {
 	private int contentH;
 	private Hit activeSlider;
 	private boolean world;
+	private float dtf = 0.016f;
+	private long tabSince = System.nanoTime();
+	private float tabY = -1f;
+	private final Map<Object, Float> hoverAnim = new HashMap<>();
+
+	private static final int BG_TOP = 0xFF1B1B38;
+	private static final int BG_BOT = 0xFF0A0A16;
+	private static final int OB_CARD_TOP = 0xFF22223F;
+	private static final int OB_CARD_BOT = 0xFF171729;
+
+	private static int vgrad(int top, int bot, int row, int h, float a) {
+		return Gfx.alpha(Gfx.lerp(top, bot, row / (float) Math.max(1, h - 1)), a);
+	}
+
+	private float hov(Object key, boolean on) {
+		float v = hoverAnim.getOrDefault(key, 0f);
+		float goal = on ? 1f : 0f;
+		v = Theme.animations() ? v + (goal - v) * Math.min(1f, dtf * 14f) : goal;
+		hoverAnim.put(key, v);
+		return v;
+	}
+
+	private float stagger(int index) {
+		if (!Theme.obsidian() || !Theme.animations()) return 1f;
+		float t = (System.nanoTime() - tabSince) / 1_000_000f - 40f - index * 38f;
+		float f = Math.max(0f, Math.min(1f, t / 260f));
+		return 1f - (1f - f) * (1f - f) * (1f - f);
+	}
 
 	public ClickGuiScreen() {
 		super(Component.literal("Nebula"));
@@ -113,8 +141,9 @@ public final class ClickGuiScreen extends Screen {
 		long now = System.nanoTime();
 		float dt = Math.min(0.1f, (now - lastFrame) / 1_000_000_000f);
 		lastFrame = now;
+		dtf = dt;
 
-		float open = Theme.animations() ? Math.min(1f, (now - openedAt) / 200_000_000f) : 1f;
+		float open = Theme.animations() ? Math.min(1f, (now - openedAt) / (Theme.obsidian() ? 360_000_000f : 200_000_000f)) : 1f;
 		float a = 1f - (1f - open) * (1f - open) * (1f - open);
 
 		hits.clear();
@@ -143,7 +172,9 @@ public final class ClickGuiScreen extends Screen {
 		for (int i = 6; i >= 1; i--) {
 			Gfx.roundRect(g, wx - i, wy - i, winW + i * 2, winH + i * 2, 8 + i, Gfx.alpha(0xFF000000, 0.07f * a));
 		}
-		if (Theme.glass()) {
+		if (Theme.obsidian()) {
+			drawObsidianWindow(g, wx, wy, winW, winH, a);
+		} else if (Theme.glass()) {
 			Gfx.panel(g, wx, wy, winW, winH, 16, a);
 			// plywajacy pasek boczny z ciemniejszego szkla
 			Gfx.roundRect(g, wx + 6, wy + 6, SIDEBAR - 8, winH - 12, 12, Gfx.alpha(0xFF000000, 0.26f * a));
@@ -155,8 +186,91 @@ public final class ClickGuiScreen extends Screen {
 			Gfx.rect(g, wx + SIDEBAR, wy + 8, 1, winH - 16, Gfx.alpha(0xFFFFFFFF, 0.05f * a));
 		}
 
-		drawSidebar(g, wx, wy, winH, mouseX, mouseY, a);
+		if (Theme.obsidian()) {
+			drawSidebarObsidian(g, wx, wy, winH, mouseX, mouseY, a);
+		} else {
+			drawSidebar(g, wx, wy, winH, mouseX, mouseY, a);
+		}
 		drawContent(g, wx + SIDEBAR + 14, wy, winW - SIDEBAR - 28, winH, mouseX, mouseY, dt, a);
+	}
+
+	private void drawObsidianWindow(GuiGraphicsExtractor g, int wx, int wy, int winW, int winH, float a) {
+		// poswiata w kolorze motywu pod oknem
+		for (int i = 10; i >= 1; i--) {
+			Gfx.roundRect(g, wx - i * 2, wy - i * 2, winW + i * 4, winH + i * 4, 18 + i * 2, Gfx.alpha(Theme.accent(), 0.012f * a));
+		}
+		final int wh = winH;
+		Gfx.roundRectRows(g, wx, wy, winW, winH, 18, row -> vgrad(BG_TOP, BG_BOT, row, wh, 0.97f * a));
+		Gfx.roundOutline(g, wx, wy, winW, winH, 18, row -> Gfx.alpha(Gfx.lerp(Theme.accent(), 0xFFFFFFFF, 0.35f), (0.34f - 0.26f * row / (float) Math.max(1, wh - 1)) * a));
+		// jasna kreska na gorze okna
+		int hw = Math.min(150, winW / 3);
+		Gfx.roundRect(g, wx + (winW - hw) / 2, wy + 1, hw, 2, 1, Gfx.alpha(Gfx.lerp(Theme.accent(), 0xFFFFFFFF, 0.5f), 0.75f * a));
+		// ciemny pasek boczny
+		Gfx.roundRect(g, wx + 7, wy + 7, SIDEBAR - 9, winH - 14, 13, Gfx.alpha(0xFF05050D, 0.55f * a));
+		Gfx.roundOutline(g, wx + 7, wy + 7, SIDEBAR - 9, winH - 14, 13, row -> Gfx.alpha(0xFFFFFFFF, 0.05f * a));
+	}
+
+	private void drawSidebarObsidian(GuiGraphicsExtractor g, int wx, int wy, int winH, int mx, int my, float a) {
+		// logo z kropka motywu
+		Gfx.circle(g, wx + 20, wy + 24, 4.5f, Gfx.alpha(Theme.accent(), 0.30f * a));
+		Gfx.circle(g, wx + 20, wy + 24, 2.5f, Gfx.alpha(Gfx.lerp(Theme.accent(), 0xFFFFFFFF, 0.5f), a));
+		Gfx.text(g, "NEBULA", wx + 30, wy + 15, Gfx.alpha(Theme.TEXT, a), false);
+		Gfx.text(g, "client", wx + 30, wy + 26, Gfx.alpha(Theme.accent(), 0.9f * a), false);
+
+		Category[] cats = Category.values();
+		int top = wy + 52;
+		int step = 27;
+		float goalY = top + tab * step;
+		if (tabY < 0f || !Theme.animations()) tabY = goalY;
+		tabY += (goalY - tabY) * Math.min(1f, dtf * 16f);
+		if (query.isEmpty()) {
+			Gfx.roundRect(g, wx + 11, Math.round(tabY), SIDEBAR - 20, 24, 8, Gfx.alpha(Theme.accent(), 0.22f * a));
+			Gfx.roundOutline(g, wx + 11, Math.round(tabY), SIDEBAR - 20, 24, 8, row -> Gfx.alpha(Theme.accent(), 0.45f * a));
+			Gfx.roundRect(g, wx + 11, Math.round(tabY) + 6, 3, 12, 1, Gfx.alpha(Gfx.lerp(Theme.accent(), 0xFFFFFFFF, 0.4f), a));
+		}
+		int ty = top;
+		for (int i = 0; i < cats.length; i++) {
+			Category c = cats[i];
+			int count = NebulaClient.modules().in(c).size();
+			boolean selected = query.isEmpty() && i == tab;
+			boolean hover = mx >= wx + 11 && mx < wx + SIDEBAR - 9 && my >= ty && my < ty + 24;
+			float hv = hov("tab" + i, hover);
+			if (!selected && hv > 0.01f) {
+				Gfx.roundRect(g, wx + 11, ty, SIDEBAR - 20, 24, 8, Gfx.alpha(0xFFFFFFFF, 0.06f * hv * a));
+			}
+			int tc = selected ? Theme.TEXT : Gfx.lerp(Theme.MUTED, Theme.TEXT, hv);
+			Gfx.text(g, c.label, wx + 22 + Math.round(hv * 2f), ty + 8, Gfx.alpha(tc, a), false);
+			String n = String.valueOf(count);
+			Gfx.text(g, n, wx + SIDEBAR - 18 - Gfx.width(n), ty + 8, Gfx.alpha(Theme.MUTED, 0.65f * a), false);
+
+			Hit hit = new Hit(wx + 8, ty, SIDEBAR - 14, 24, false);
+			final int index = i;
+			hit.onLeft = () -> {
+				tab = index;
+				query = "";
+				scroll = 0;
+				scrollTarget = 0;
+				tabSince = System.nanoTime();
+			};
+			hits.add(hit);
+			ty += step;
+		}
+
+		int bx = wx + 14;
+		int bw = SIDEBAR - 26;
+		int by = wy + winH - 36;
+		boolean hover = mx >= bx && mx < bx + bw && my >= by && my < by + 24;
+		float hv = hov("hud", hover);
+		Gfx.roundRect(g, bx, by, bw, 24, 8, Gfx.alpha(Gfx.lerp(Theme.accentDark(), Theme.accent(), hv), 0.95f * a));
+		Gfx.roundOutline(g, bx, by, bw, 24, 8, row -> Gfx.alpha(0xFFFFFFFF, (0.10f + 0.16f * hv) * a));
+		String label = "Edytor HUD";
+		Gfx.text(g, label, bx + (bw - Gfx.width(label)) / 2, by + 8, Gfx.alpha(Theme.TEXT, a), false);
+		Hit hit = new Hit(bx, by, bw, 24, false);
+		hit.onLeft = () -> {
+			ConfigManager.save(NebulaClient.modules());
+			dev.nebula.client.Compat.setScreen(Minecraft.getInstance(), new HudEditorScreen(this));
+		};
+		hits.add(hit);
 	}
 
 	private void drawSidebar(GuiGraphicsExtractor g, int wx, int wy, int winH, int mx, int my, float a) {
@@ -214,7 +328,13 @@ public final class ClickGuiScreen extends Screen {
 	private void drawContent(GuiGraphicsExtractor g, int cx, int wy, int cw, int winH,
 							 int mx, int my, float dt, float a) {
 		// wyszukiwarka
-		Gfx.roundRect(g, cx, wy + 10, cw, 22, 11, Gfx.alpha(Theme.glass() ? 0xFF000000 : 0xFF12121B, (Theme.glass() ? 0.30f : 1f) * a));
+		if (Theme.obsidian()) {
+			Gfx.roundRect(g, cx, wy + 10, cw, 22, 11, Gfx.alpha(0xFF05050D, 0.65f * a));
+			final boolean typing = !query.isEmpty();
+			Gfx.roundOutline(g, cx, wy + 10, cw, 22, 11, row -> Gfx.alpha(typing ? Theme.accent() : 0xFFFFFFFF, (typing ? 0.55f : 0.07f) * a));
+		} else {
+			Gfx.roundRect(g, cx, wy + 10, cw, 22, 11, Gfx.alpha(Theme.glass() ? 0xFF000000 : 0xFF12121B, (Theme.glass() ? 0.30f : 1f) * a));
+		}
 		boolean caret = (System.currentTimeMillis() / 500) % 2 == 0;
 		if (query.isEmpty()) {
 			Gfx.text(g, "Szukaj modułów...  (PPM = ustawienia)", cx + 10, wy + 17, Gfx.alpha(Theme.MUTED, 0.8f * a), false);
@@ -258,7 +378,8 @@ public final class ClickGuiScreen extends Screen {
 		for (int i = 0; i < modules.size(); i++) {
 			int h = heights[i];
 			if (y + h >= viewTop && y <= viewBottom) {
-				drawCard(g, modules.get(i), cx, y, cardW, h, mx, my, dt, a);
+				float f = stagger(i);
+				drawCard(g, modules.get(i), cx, y + Math.round((1f - f) * 10f), cardW, h, mx, my, dt, a * f);
 			}
 			y += h + GAP;
 		}
@@ -281,7 +402,18 @@ public final class ClickGuiScreen extends Screen {
 		boolean hasSettings = !m.settings.isEmpty();
 		boolean expanded = EXPANDED.contains(m);
 
-		if (Theme.glass()) {
+		if (Theme.obsidian()) {
+			float hv = hov(m, hover);
+			float onT = toggleAnim.getOrDefault(m, on ? 1f : 0f);
+			float act = Math.max(onT * 0.6f, hv);
+			final int th = Math.max(1, total - 1);
+			Gfx.roundRectRows(g, x, y - Math.round(hv), w, total, 12, row -> vgrad(OB_CARD_TOP, OB_CARD_BOT, row, total, (0.90f + 0.08f * hv) * a));
+			if (onT > 0.01f && m.isToggleable()) {
+				Gfx.roundRect(g, x, y - Math.round(hv), w, total, 12, Gfx.alpha(Theme.accent(), 0.07f * onT * a));
+			}
+			Gfx.roundOutline(g, x, y - Math.round(hv), w, total, 12,
+					row -> Gfx.alpha(Gfx.lerp(0xFFFFFFFF, Theme.accent(), act), (0.07f + 0.30f * act * (1f - 0.55f * row / th)) * a));
+		} else if (Theme.glass()) {
 			Gfx.roundRect(g, x, y, w, total, 10, Gfx.alpha(0xFFFFFFFF, (hover ? 0.14f : 0.07f) * a));
 			final int th = Math.max(1, total - 1);
 			Gfx.roundOutline(g, x, y, w, total, 10, row -> Gfx.alpha(0xFFFFFFFF, (0.26f - 0.18f * row / th) * a));
@@ -302,10 +434,18 @@ public final class ClickGuiScreen extends Screen {
 			t = Theme.animations() ? t + (goal - t) * Math.min(1f, dt * 14f) : goal;
 			toggleAnim.put(m, t);
 
-			int sx = x + w - 44;
-			int sy = y + 9;
-			Gfx.roundRect(g, sx, sy, 32, 16, 8, Gfx.alpha(Gfx.lerp(Theme.TRACK, Theme.accent(), t), a));
-			Gfx.roundRect(g, sx + 2 + Math.round(t * 16f), sy + 2, 12, 12, 6, Gfx.alpha(0xFFFFFFFF, a));
+			if (Theme.obsidian()) {
+				int sx = x + w - 50;
+				int sy = y + 8;
+				if (t > 0.02f) Gfx.roundRect(g, sx - 2, sy - 2, 38, 22, 11, Gfx.alpha(Theme.accent(), 0.16f * t * a));
+				Gfx.roundRect(g, sx, sy, 34, 18, 9, Gfx.alpha(Gfx.lerp(0xFF2A2A45, Theme.accent(), t), a));
+				Gfx.roundRect(g, sx + 2 + Math.round(t * 16f), sy + 2, 14, 14, 7, Gfx.alpha(0xFFFFFFFF, a));
+			} else {
+				int sx = x + w - 44;
+				int sy = y + 9;
+				Gfx.roundRect(g, sx, sy, 32, 16, 8, Gfx.alpha(Gfx.lerp(Theme.TRACK, Theme.accent(), t), a));
+				Gfx.roundRect(g, sx + 2 + Math.round(t * 16f), sy + 2, 12, 12, 6, Gfx.alpha(0xFFFFFFFF, a));
+			}
 		}
 		if (hasSettings) {
 			String arrow = expanded ? "v" : ">";
@@ -336,8 +476,13 @@ public final class ClickGuiScreen extends Screen {
 	}
 
 	private void drawSettings(GuiGraphicsExtractor g, Module m, int x, int y, int w, float a) {
-		Gfx.roundRect(g, x + 6, y, w - 12, settingsHeight(m) + 2, 8,
-				Gfx.alpha(Theme.glass() ? 0xFF000000 : SETTINGS_BG, (Theme.glass() ? 0.28f : 1f) * a));
+		if (Theme.obsidian()) {
+			Gfx.roundRect(g, x + 6, y, w - 12, settingsHeight(m) + 2, 9, Gfx.alpha(0xFF06060E, 0.72f * a));
+			Gfx.roundOutline(g, x + 6, y, w - 12, settingsHeight(m) + 2, 9, row -> Gfx.alpha(0xFFFFFFFF, 0.05f * a));
+		} else {
+			Gfx.roundRect(g, x + 6, y, w - 12, settingsHeight(m) + 2, 8,
+					Gfx.alpha(Theme.glass() ? 0xFF000000 : SETTINGS_BG, (Theme.glass() ? 0.28f : 1f) * a));
+		}
 		int lx = x + 16;
 		int rx = x + w - 16;
 		int cy = y + 2;
@@ -365,6 +510,7 @@ public final class ClickGuiScreen extends Screen {
 				int fill = Math.round(bw * (float) ns.fraction());
 				Gfx.roundRect(g, lx, by, bw, 4, 2, Gfx.alpha(Theme.TRACK, a));
 				Gfx.roundRect(g, lx, by, Math.max(3, fill), 4, 2, Gfx.alpha(Theme.accent(), a));
+				if (Theme.obsidian()) Gfx.circle(g, lx + fill, by + 2, 7f, Gfx.alpha(Theme.accent(), 0.22f * a));
 				Gfx.roundRect(g, lx + fill - 4, by - 2, 8, 8, 4, Gfx.alpha(0xFFFFFFFF, a));
 				hit.slider = ns;
 				hit.sliderX = lx;

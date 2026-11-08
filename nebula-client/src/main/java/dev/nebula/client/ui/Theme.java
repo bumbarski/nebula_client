@@ -36,9 +36,14 @@ public final class Theme {
 		return appearance == null ? 0.85f : appearance.opacity.getFloat();
 	}
 
+	/** Styl 0 "Obsidian": ciemne gradientowe okno z poswiata motywu (domyslny). */
+	public static boolean obsidian() {
+		return appearance == null || appearance.style.index() == 0;
+	}
+
 	/** true = styl "Szklo" (liquid glass). */
 	public static boolean glass() {
-		return appearance == null || appearance.style.index() == 0;
+		return appearance != null && appearance.style.index() == 1;
 	}
 
 	public static boolean blur() {
