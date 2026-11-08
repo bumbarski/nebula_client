@@ -88,6 +88,14 @@ public final class ModuleManager {
 		register(new dev.nebula.client.module.impl.ChamsModule());
 		register(new dev.nebula.client.module.impl.AutoTrapModule());
 
+		register(new dev.nebula.client.module.impl.BlinkModule());
+		register(new dev.nebula.client.module.impl.NoCameraClipModule());
+		register(new dev.nebula.client.module.impl.AttributeSwapModule());
+		register(new dev.nebula.client.module.impl.TridentBoostModule());
+		register(new dev.nebula.client.module.impl.LegitStrafeModule());
+		register(new dev.nebula.client.module.impl.PopArrowsModule());
+		register(new dev.nebula.client.module.impl.GuiMoveModule());
+
 		register(freelook);
 		register(voice);
 		register(new ToggleKeysModule());
