@@ -14,7 +14,7 @@ import dev.nebula.client.setting.ModeSetting;
 import dev.nebula.client.setting.NumberSetting;
 import dev.nebula.client.setting.Setting;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
