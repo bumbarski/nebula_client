@@ -96,7 +96,6 @@ public final class ClickGuiScreen extends Screen {
 	/** Tryb panelu w swiecie: okno rysowane przez WorldPanel w wirtualnym rozmiarze w x h. */
 	public void forWorld(Minecraft mc, int w, int h) {
 		world = true;
-		minecraft = mc;
 		width = w;
 		height = h;
 	}
@@ -207,7 +206,7 @@ public final class ClickGuiScreen extends Screen {
 		Hit hit = new Hit(bx, by, bw, 24, false);
 		hit.onLeft = () -> {
 			ConfigManager.save(NebulaClient.modules());
-			dev.nebula.client.Compat.setScreen(minecraft, new HudEditorScreen(this));
+			dev.nebula.client.Compat.setScreen(Minecraft.getInstance(), new HudEditorScreen(this));
 		};
 		hits.add(hit);
 	}
