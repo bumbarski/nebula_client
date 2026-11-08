@@ -65,7 +65,10 @@ public final class ModuleManager {
 		register(new GammaModule());
 		register(new ViewModelModule());
 
+		register(new dev.nebula.client.module.impl.KillAuraModule());
+		register(new dev.nebula.client.module.impl.NukerModule());
 		register(new dev.nebula.client.module.impl.FlightModule());
+		register(new dev.nebula.client.module.impl.NoPushModule());
 		register(new dev.nebula.client.module.impl.SpeedModule());
 
 		register(new dev.nebula.client.module.impl.AutoArmorModule());
