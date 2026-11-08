@@ -21,8 +21,8 @@ public final class WorldPanel {
 
 	private static final int VW = 440;
 	private static final int VH = 290;
-	private static final double DISTANCE = 2.4;
-	private static final double WIDTH_BLOCKS = 3.6;
+	private static final double DISTANCE = 2.2;
+	private static final double WIDTH_BLOCKS = 2.6;
 
 	private static ClickGuiScreen screen;
 	private static double ax, ay, az;
@@ -146,28 +146,27 @@ public final class WorldPanel {
 			hovered = false;
 			return;
 		}
-		// transformacja liczona w srodku panelu (tekst zostaje poziomy, jak na tablicy zawieszonej na scianie)
-		float m00 = (float) ((xr[0] - xl[0]) / VW);
-		float m01 = (float) ((xr[1] - xl[1]) / VW);
-		float m10 = (float) ((yb[0] - yt[0]) / VH);
-		float m11 = (float) ((yb[1] - yt[1]) / VH);
-		double[] tl = {c[0] - (m00 * VW + m10 * VH) / 2.0, c[1] - (m01 * VW + m11 * VH) / 2.0};
-		double det = m00 * m11 - m10 * m01;
-		if (det <= 1e-6) {
-			// widzisz panel od tylu albo prawie z boku
+		// tablica wisi w swiecie: bez przechylu i skosu, tylko skalowanie z odlegloscia i zwezanie przy patrzeniu z boku
+		double wpx = xr[0] - xl[0];
+		double hpx = yb[1] - yt[1];
+		if (wpx < 6.0 || hpx < 6.0 || p.depth(ax, ay, az) < 0.7) {
 			hovered = false;
 			return;
 		}
-		double px = p.sw / 2.0 - tl[0];
-		double py = p.sh / 2.0 - tl[1];
-		lx = (float) ((px * m11 - py * m10) / det);
-		ly = (float) ((py * m00 - px * m01) / det);
+		float m00 = (float) (wpx / VW);
+		float m11 = (float) (hpx / VH);
+		float m01 = 0f;
+		float m10 = 0f;
+		double tlx = c[0] - wpx / 2.0;
+		double tly = c[1] - hpx / 2.0;
+		lx = (float) ((p.sw / 2.0 - tlx) / m00);
+		ly = (float) ((p.sh / 2.0 - tly) / m11);
 		hovered = lx >= 0 && ly >= 0 && lx < VW && ly < VH;
 
 		screen.width = VW;
 		screen.height = VH;
-		float m20 = (float) tl[0];
-		float m21 = (float) tl[1];
+		float m20 = (float) tlx;
+		float m21 = (float) tly;
 		Gfx.pushAffine(g, m00, m01, m10, m11, m20, m21);
 		screen.drawPanel(g, hovered ? Math.round(lx) : -1000, hovered ? Math.round(ly) : -1000);
 		Gfx.popScale(g);
