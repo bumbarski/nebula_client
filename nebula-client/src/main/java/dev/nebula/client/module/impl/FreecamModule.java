@@ -24,7 +24,17 @@ public final class FreecamModule extends Module {
 	protected void onEnable() {
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.player == null || mc.level == null) return;
-		cam = new ArmorStand(EntityType.ARMOR_STAND, mc.level);
+		EntityType<?> type = null;
+		for (EntityType<?> et : net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE) {
+			if (et.toString().contains("armor_stand")) {
+				type = et;
+				break;
+			}
+		}
+		if (type == null) return;
+		@SuppressWarnings("unchecked")
+		EntityType<ArmorStand> as = (EntityType<ArmorStand>) type;
+		cam = new ArmorStand(as, mc.level);
 		cam.setPos(mc.player.getX(), mc.player.getEyeY() - 1.0, mc.player.getZ());
 		cam.setYRot(mc.player.getYRot());
 		cam.setXRot(mc.player.getXRot());
