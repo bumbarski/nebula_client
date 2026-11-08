@@ -21,12 +21,13 @@ public final class WorldPanel {
 
 	private static final int VW = 440;
 	private static final int VH = 290;
-	private static final double DISTANCE = 2.2;
-	private static final double WIDTH_BLOCKS = 2.6;
+	private static final double DISTANCE = 3.2;
+	private static final double WIDTH_BLOCKS = 4.0;
 
 	private static ClickGuiScreen screen;
 	private static double ax, ay, az;
 	private static double rx, rz;
+	private static double nx, nz;
 	private static boolean hovered;
 	private static float lx, ly;
 	private static boolean dragging;
@@ -54,16 +55,16 @@ public final class WorldPanel {
 		if (mc.player == null) return;
 		Projector p = Projector.create(mc);
 		double psi = Math.toRadians(p.yawDeg());
-		double th = Math.toRadians(p.pitchDeg());
-		double fx = -Math.sin(psi) * Math.cos(th);
-		double fy = -Math.sin(th);
-		double fz = Math.cos(psi) * Math.cos(th);
+		double fx = -Math.sin(psi);
+		double fz = Math.cos(psi);
 		ax = p.cx + fx * DISTANCE;
-		ay = p.cy + fy * DISTANCE;
+		ay = p.cy - 0.05;
 		az = p.cz + fz * DISTANCE;
-		// panel zostaje na stale zwrocony tak, jak patrzyles przy otwarciu (nie obraca sie za toba)
+		// prawa reka panelu = prawa reka kamery przy otwarciu; normalna wskazuje w strone gracza
 		rx = -Math.cos(psi);
 		rz = -Math.sin(psi);
+		nx = -fx;
+		nz = -fz;
 		screen = new ClickGuiScreen();
 		screen.forWorld(mc, VW, VH);
 		hovered = false;
@@ -124,6 +125,13 @@ public final class WorldPanel {
 		}
 	}
 
+	/** Rzutuje punkt panelu (u w pikselach okna, v w pikselach okna od gory) na ekran; false gdy za kamera. */
+	private static boolean project(Projector p, double u, double v, double w, double h, double[] out) {
+		double side = (u / VW - 0.5) * w;
+		double up = (0.5 - v / VH) * h;
+		return p.toScreen(ax + rx * side, ay + up, az + rz * side, out);
+	}
+
 	public static void render(GuiGraphicsExtractor g, Minecraft mc) {
 		if (screen == null || mc.player == null) return;
 		if (Compat.screen(mc) != null) {
@@ -133,43 +141,84 @@ public final class WorldPanel {
 		Projector p = Projector.create(mc);
 		double w = WIDTH_BLOCKS * Theme.panelSize();
 		double h = w * VH / VW;
-		double[] c = new double[2];
-		double[] xl = new double[2];
-		double[] xr = new double[2];
-		double[] yt = new double[2];
-		double[] yb = new double[2];
-		double hx = rx * w / 2.0;
-		double hz = rz * w / 2.0;
-		double hy = h / 2.0;
-		if (!p.toScreen(ax, ay, az, c) || !p.toScreen(ax - hx, ay, az - hz, xl) || !p.toScreen(ax + hx, ay, az + hz, xr)
-				|| !p.toScreen(ax, ay + hy, az, yt) || !p.toScreen(ax, ay - hy, az, yb)) {
+
+		// od tylu albo gdy stoisz tuz przy tablicy (lub przechodzisz przez nia) nie rysujemy jej
+		double dist = (p.cx - ax) * nx + (p.cz - az) * nz;
+		hovered = false;
+		if (dist < 0.6) return;
+
+		// trafienie promieniem z celownika w plaszczyzne panelu (jak w modzie kolegi)
+		double psi = Math.toRadians(p.yawDeg());
+		double th = Math.toRadians(p.pitchDeg());
+		double dx = -Math.sin(psi) * Math.cos(th);
+		double dy = -Math.sin(th);
+		double dz = Math.cos(psi) * Math.cos(th);
+		double denom = dx * nx + dz * nz;
+		if (denom < -1e-4) {
+			double t = ((ax - p.cx) * nx + (az - p.cz) * nz) / denom;
+			if (t > 0 && t < 16) {
+				double hx = p.cx + dx * t - ax;
+				double hy = p.cy + dy * t - ay;
+				double hz = p.cz + dz * t - az;
+				lx = (float) (((hx * rx + hz * rz) / w + 0.5) * VW);
+				ly = (float) ((0.5 - hy / h) * VH);
+				hovered = lx >= 0 && ly >= 0 && lx < VW && ly < VH;
+			}
+		}
+
+		int n = 14;
+		double[] a = new double[2];
+		double[] b = new double[2];
+		if (!project(p, 0, VH / 2.0, w, h, a) || !project(p, VW, VH / 2.0, w, h, b)) {
 			hovered = false;
 			return;
 		}
-		// tablica wisi w swiecie: bez przechylu i skosu, tylko skalowanie z odlegloscia i zwezanie przy patrzeniu z boku
-		double wpx = xr[0] - xl[0];
-		double hpx = yb[1] - yt[1];
-		if (wpx < 6.0 || hpx < 6.0 || p.depth(ax, ay, az) < 0.7) {
+		double da = p.depth(ax - rx * w / 2, ay, az - rz * w / 2);
+		double db = p.depth(ax + rx * w / 2, ay, az + rz * w / 2);
+		if (da < 0.3 || db < 0.3) {
 			hovered = false;
 			return;
 		}
-		float m00 = (float) (wpx / VW);
-		float m11 = (float) (hpx / VH);
-		float m01 = 0f;
-		float m10 = 0f;
-		double tlx = c[0] - wpx / 2.0;
-		double tly = c[1] - hpx / 2.0;
-		lx = (float) ((p.sw / 2.0 - tlx) / m00);
-		ly = (float) ((p.sh / 2.0 - tly) / m11);
-		hovered = lx >= 0 && ly >= 0 && lx < VW && ly < VH;
+		if (Math.abs(da - db) < 0.03 * Math.max(da, db)) n = 1;
 
 		screen.width = VW;
 		screen.height = VH;
-		float m20 = (float) tlx;
-		float m21 = (float) tly;
-		Gfx.pushAffine(g, m00, m01, m10, m11, m20, m21);
-		screen.drawPanel(g, hovered ? Math.round(lx) : -1000, hovered ? Math.round(ly) : -1000);
-		Gfx.popScale(g);
+		int mx = hovered ? Math.round(lx) : -1000;
+		int my = hovered ? Math.round(ly) : -1000;
+
+		// perspektywa: panel dzielimy na pionowe paski, kazdy ze swoja skala (os pozioma i pionowa, bez skosu),
+		// a przycinamy je scissorem, wiec calosc wyglada jak plaska tablica widziana w perspektywie
+		double[] top = new double[2];
+		double[] bot = new double[2];
+		double[] mid = new double[2];
+		double[] mid2 = new double[2];
+		int prev = 0;
+		boolean ok = project(p, 0, VH / 2.0, w, h, mid);
+		for (int i = 0; i < n && ok; i++) {
+			double u0 = (double) VW * i / n;
+			double u1 = (double) VW * (i + 1) / n;
+			ok = project(p, u1, VH / 2.0, w, h, mid2);
+			double um = (u0 + u1) / 2.0;
+			if (!ok || !project(p, um, 0, w, h, top) || !project(p, um, VH, w, h, bot)) break;
+			int x0 = i == 0 ? (int) Math.floor(mid[0]) : prev;
+			int x1 = i == n - 1 ? (int) Math.ceil(mid2[0]) : (int) Math.round(mid2[0]);
+			prev = x1;
+			if (x1 > x0) {
+				double sxs = (mid2[0] - mid[0]) / (u1 - u0);
+				double hp = bot[1] - top[1];
+				if (sxs > 0 && hp > 2) {
+					float sy = (float) (hp / VH);
+					float yc = (float) ((top[1] + bot[1]) / 2.0);
+					g.enableScissor(x0, 0, x1, p.sh);
+					Gfx.pushXform(g, (float) (mid[0] - u0 * sxs), yc - VH / 2f * sy, 0f, (float) sxs, sy);
+					screen.drawPanel(g, mx, my);
+					Gfx.popScale(g);
+					g.disableScissor();
+				}
+			}
+			mid[0] = mid2[0];
+			mid[1] = mid2[1];
+		}
 
 		// kropka celownika na panelu
 		if (hovered) {
