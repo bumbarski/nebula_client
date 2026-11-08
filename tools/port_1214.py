@@ -174,6 +174,7 @@ if MC == '1.21.11':
     os.makedirs(libs, exist_ok=True)
     shutil.copy(os.path.join(LF, 'lyricsflow.jar'), os.path.join(libs, 'lyricsflow.jar'))
     shutil.copy(os.path.join(LF, 'LyricsFlowModule.java'), os.path.join(JAVA, 'module', 'impl', 'LyricsFlowModule.java'))
+    shutil.copy(os.path.join(LF, 'SkyGridSetting.java'), os.path.join(JAVA, 'module', 'impl', 'SkyGridSetting.java'))
     bg = os.path.join(DST, 'build.gradle')
     t = open(bg, encoding='utf-8').read()
     t = t.replace('modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"',

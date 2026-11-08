@@ -28,6 +28,7 @@ public final class LyricsFlowModule extends Module {
 	private final BoolSetting beat = add(new BoolSetting("Pulsowanie przy słowach", false));
 	private final BoolSetting caps = add(new BoolSetting("Wielkie litery", true));
 	private final ModeSetting theme = add(new ModeSetting("Motyw kolorów", THEME_IDS, indexOf("lavender")));
+	private final SkyGridSetting skies = add(new SkyGridSetting());
 	private final BoolSetting fx = add(new BoolSetting("Efekty nieba (kolory, zorza, gwiazdy)", false));
 	private final BoolSetting bar = add(new BoolSetting("Pasek muzyki", true));
 	private final ModeSetting barStyle = add(new ModeSetting("Styl paska", new String[]{"Karaoke", "Prosty"}, 0));

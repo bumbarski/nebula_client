@@ -6,6 +6,7 @@ import dev.nebula.client.config.ConfigManager;
 import dev.nebula.client.module.Category;
 import dev.nebula.client.module.Module;
 import dev.nebula.client.setting.BoolSetting;
+import dev.nebula.client.setting.CustomSetting;
 import dev.nebula.client.setting.ModeSetting;
 import dev.nebula.client.setting.NumberSetting;
 import dev.nebula.client.setting.Setting;
@@ -59,7 +60,10 @@ public final class ClickGuiScreen extends Screen {
 	private int contentH;
 	private Hit activeSlider;
 	private boolean world;
+	private static int innerW = 300;
 	private float dtf = 0.016f;
+	private int hoverX = -1000;
+	private int hoverY = -1000;
 	private long tabSince = System.nanoTime();
 	private float tabY = -1f;
 	private final Map<Object, Float> hoverAnim = new HashMap<>();
@@ -100,6 +104,8 @@ public final class ClickGuiScreen extends Screen {
 		Runnable onRight;
 		NumberSetting slider;
 		int sliderX, sliderW;
+		CustomSetting custom;
+		int customX, customY, customW;
 
 		Hit(int x, int y, int w, int h, boolean inList) {
 			this.x = x;
@@ -142,6 +148,8 @@ public final class ClickGuiScreen extends Screen {
 		float dt = Math.min(0.1f, (now - lastFrame) / 1_000_000_000f);
 		lastFrame = now;
 		dtf = dt;
+		hoverX = mouseX;
+		hoverY = mouseY;
 
 		float open = Theme.animations() ? Math.min(1f, (now - openedAt) / (Theme.obsidian() ? 360_000_000f : 200_000_000f)) : 1f;
 		float a = 1f - (1f - open) * (1f - open) * (1f - open);
@@ -348,6 +356,7 @@ public final class ClickGuiScreen extends Screen {
 		viewBottom = wy + winH - 10;
 		int viewH = viewBottom - viewTop;
 
+		innerW = cw - 8 - 32;
 		List<Module> modules = visibleModules();
 		int[] heights = new int[modules.size()];
 		contentH = 0;
@@ -515,6 +524,12 @@ public final class ClickGuiScreen extends Screen {
 				hit.slider = ns;
 				hit.sliderX = lx;
 				hit.sliderW = bw;
+			} else if (s instanceof CustomSetting cs) {
+				cs.draw(g, lx, cy + 3, rx - lx, hoverX, hoverY, a);
+				hit.custom = cs;
+				hit.customX = lx;
+				hit.customY = cy + 3;
+				hit.customW = rx - lx;
 			}
 			hits.add(hit);
 			cy += sh;
@@ -551,6 +566,7 @@ public final class ClickGuiScreen extends Screen {
 	}
 
 	private static int settingHeight(Setting s) {
+		if (s instanceof CustomSetting cs) return cs.height(innerW) + 6;
 		return s instanceof NumberSetting ? 32 : 22;
 	}
 
@@ -569,6 +585,12 @@ public final class ClickGuiScreen extends Screen {
 			if (!hit.contains(mx, my)) continue;
 			if (hit.inList && (my < viewTop || my >= viewBottom)) continue;
 
+			if (hit.custom != null) {
+				if (hit.custom.click(hit.customX, hit.customY, hit.customW, mx, my, button)) {
+					ConfigManager.save(NebulaClient.modules());
+				}
+				return true;
+			}
 			if (hit.slider != null && button == 0) {
 				activeSlider = hit;
 				updateSlider(mx);
