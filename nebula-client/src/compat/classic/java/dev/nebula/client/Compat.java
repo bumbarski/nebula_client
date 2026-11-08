@@ -29,8 +29,25 @@ public final class Compat {
 		mc.setScreen(screen);
 	}
 
-	/** Shift-klik w slot kontenera. */
+	/** Shift-klik w slot kontenera (nazwy API roznia sie miedzy wersjami, wiec przez refleksje). */
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static void quickMove(Minecraft mc, int containerId, int slot) {
-		mc.gameMode.handleInventoryMouseClick(containerId, slot, 0, net.minecraft.world.inventory.ClickType.QUICK_MOVE, mc.player);
+		try {
+			Class<?> type;
+			try {
+				type = Class.forName("net.minecraft.world.inventory.ContainerInput");
+			} catch (ClassNotFoundException e) {
+				type = Class.forName("net.minecraft.world.inventory.ClickType");
+			}
+			Object quick = Enum.valueOf((Class) type, "QUICK_MOVE");
+			for (java.lang.reflect.Method m : mc.gameMode.getClass().getMethods()) {
+				Class<?>[] pt = m.getParameterTypes();
+				if (pt.length == 5 && pt[3] == type && (m.getName().equals("handleInventoryMouseClick") || m.getName().equals("handleContainerInput"))) {
+					m.invoke(mc.gameMode, containerId, slot, 0, quick, mc.player);
+					return;
+				}
+			}
+		} catch (Throwable ignored) {
+		}
 	}
 }
