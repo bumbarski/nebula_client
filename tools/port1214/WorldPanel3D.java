@@ -412,7 +412,22 @@ public final class WorldPanel {
 		hits.clear();
 		late.clear();
 
-		if (slide > 0.01f) {
+		boolean behind = (p.cx - ax) * nx + (p.cz - az) * nz < 0;
+		if (behind && slide > 0.01f) {
+			// widok od tylu: czarna plyta z logiem Nebuli na srodku
+			m = new Matrix4f((Matrix4fc) frame).rotateY((float) Math.PI).scale(slide, 1f, 1f);
+			float a = Math.min(1f, slide * 1.5f);
+			round(-0.8f, -0.8f, VW + 1.6f, VH + 1.6f, 21f, 0xB9A8FF, DEEP, 0.35f * a, 0.2f);
+			round(0f, 0f, VW, VH, 20f, 0x050508, 0x000000, 1f * a, 0.4f);
+			float cx = VW / 2f, cy = VH / 2f - 16f;
+			round(cx - 34f, cy - 34f, 68f, 68f, 34f, ACCENT, DEEP, 0.25f * a, 0.8f);
+			round(cx - 28f, cy - 28f, 56f, 56f, 28f, 0x000000, 0x000000, 1f * a, 1.0f);
+			round(cx - 22f, cy - 22f, 44f, 44f, 22f, ACCENT2, ACCENT, 0.95f * a, 1.2f);
+			round(cx - 12f, cy - 12f, 24f, 24f, 12f, 0x050508, 0x050508, 1f * a, 1.4f);
+			round(cx - 5f, cy - 5f, 10f, 10f, 5f, 0xFFFFFF, ACCENT2, 1f * a, 1.6f);
+			ctext("NEBULA", cx, cy + 46f, 2.2f, 0xFFFFFF, a, 1.8f);
+			ctext("CLIENT", cx, cy + 68f, 0.9f, 0x8F8AB0, a, 1.8f);
+		} else if (slide > 0.01f) {
 			m = new Matrix4f((Matrix4fc) frame).scale(slide, 1f, 1f);
 			float a = Math.min(1f, slide * 1.5f);
 			for (int i = 4; i >= 1; i--) {
