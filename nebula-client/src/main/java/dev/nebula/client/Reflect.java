@@ -101,4 +101,23 @@ public final class Reflect {
 		}
 		return false;
 	}
+
+	/** Wysyla pakiet pozycji (x, y+dy, z, onGround=false); konstruktor zalezy od wersji, wiec przez refleksje. */
+	public static void sendPos(Minecraft mc, double dy) {
+		try {
+			Class<?> c = Class.forName("net.minecraft.network.protocol.game.ServerboundMovePlayerPacket$Pos");
+			for (java.lang.reflect.Constructor<?> k : c.getConstructors()) {
+				int n = k.getParameterCount();
+				if (n == 4) {
+					mc.getConnection().send((net.minecraft.network.protocol.Packet<?>) k.newInstance(mc.player.getX(), mc.player.getY() + dy, mc.player.getZ(), false));
+					return;
+				}
+				if (n == 5) {
+					mc.getConnection().send((net.minecraft.network.protocol.Packet<?>) k.newInstance(mc.player.getX(), mc.player.getY() + dy, mc.player.getZ(), false, false));
+					return;
+				}
+			}
+		} catch (Throwable ignored) {
+		}
+	}
 }
