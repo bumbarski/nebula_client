@@ -28,4 +28,9 @@ public final class Compat {
 	public static void setScreen(Minecraft mc, Screen screen) {
 		mc.gui.setScreen(screen);
 	}
+
+	/** Shift-klik w slot kontenera. */
+	public static void quickMove(Minecraft mc, int containerId, int slot) {
+		mc.gameMode.handleContainerInput(containerId, slot, 0, net.minecraft.world.inventory.ContainerInput.QUICK_MOVE, mc.player);
+	}
 }

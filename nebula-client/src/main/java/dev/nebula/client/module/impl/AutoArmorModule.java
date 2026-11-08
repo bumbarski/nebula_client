@@ -5,7 +5,6 @@ import dev.nebula.client.module.Module;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.equipment.Equippable;
 
@@ -36,7 +35,7 @@ public final class AutoArmorModule extends Module {
 				default -> -1;
 			};
 			if (target < 0 || !menu.getSlot(target).getItem().isEmpty()) continue;
-			mc.gameMode.handleInventoryMouseClick(menu.containerId, i, 0, ClickType.QUICK_MOVE, mc.player);
+			dev.nebula.client.Compat.quickMove(mc, menu.containerId, i);
 			return;
 		}
 	}

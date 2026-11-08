@@ -5,7 +5,6 @@ import dev.nebula.client.module.Module;
 import dev.nebula.client.setting.NumberSetting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.inventory.ChestMenu;
-import net.minecraft.world.inventory.ClickType;
 
 /** Po otwarciu skrzyni sam przenosi z niej przedmioty do ekwipunku. */
 public final class ChestStealerModule extends Module {
@@ -28,7 +27,7 @@ public final class ChestStealerModule extends Module {
 		int size = menu.getRowCount() * 9;
 		for (int i = 0; i < size; i++) {
 			if (!menu.getSlot(i).getItem().isEmpty()) {
-				mc.gameMode.handleInventoryMouseClick(menu.containerId, i, 0, ClickType.QUICK_MOVE, mc.player);
+				dev.nebula.client.Compat.quickMove(mc, menu.containerId, i);
 				return;
 			}
 		}
