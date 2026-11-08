@@ -26,6 +26,7 @@ public final class WorldPanel {
 
 	private static ClickGuiScreen screen;
 	private static double ax, ay, az;
+	private static double rx, rz;
 	private static boolean hovered;
 	private static float lx, ly;
 	private static boolean dragging;
@@ -60,6 +61,9 @@ public final class WorldPanel {
 		ax = p.cx + fx * DISTANCE;
 		ay = p.cy + fy * DISTANCE;
 		az = p.cz + fz * DISTANCE;
+		// panel zostaje na stale zwrocony tak, jak patrzyles przy otwarciu (nie obraca sie za toba)
+		rx = -Math.cos(psi);
+		rz = -Math.sin(psi);
 		screen = new ClickGuiScreen();
 		screen.forWorld(mc, VW, VH);
 		hovered = false;
@@ -127,23 +131,40 @@ public final class WorldPanel {
 			return;
 		}
 		Projector p = Projector.create(mc);
-		double[] sc = new double[2];
-		double depth = p.depth(ax, ay, az);
-		if (depth < 0.3 || !p.toScreen(ax, ay, az, sc)) {
+		double w = WIDTH_BLOCKS * Theme.panelSize();
+		double h = w * VH / VW;
+		double[] tl = new double[2];
+		double[] tr = new double[2];
+		double[] bl = new double[2];
+		double hx = rx * w / 2.0;
+		double hz = rz * w / 2.0;
+		double hy = h / 2.0;
+		if (!p.toScreen(ax - hx, ay + hy, az - hz, tl) || !p.toScreen(ax + hx, ay + hy, az + hz, tr)
+				|| !p.toScreen(ax - hx, ay - hy, az - hz, bl)) {
 			hovered = false;
 			return;
 		}
-		double pxPerBlock = (p.sh / 2.0) / (depth * p.tanHalf());
-		float s = (float) (WIDTH_BLOCKS * Theme.panelSize() * pxPerBlock / VW);
-		float tlx = (float) (sc[0] - VW * s / 2.0);
-		float tly = (float) (sc[1] - VH * s / 2.0);
-		lx = (p.sw / 2f - tlx) / s;
-		ly = (p.sh / 2f - tly) / s;
+		float m00 = (float) ((tr[0] - tl[0]) / VW);
+		float m01 = (float) ((tr[1] - tl[1]) / VW);
+		float m10 = (float) ((bl[0] - tl[0]) / VH);
+		float m11 = (float) ((bl[1] - tl[1]) / VH);
+		double det = m00 * m11 - m10 * m01;
+		if (det <= 1e-6) {
+			// widzisz panel od tylu albo prawie z boku
+			hovered = false;
+			return;
+		}
+		double px = p.sw / 2.0 - tl[0];
+		double py = p.sh / 2.0 - tl[1];
+		lx = (float) ((px * m11 - py * m10) / det);
+		ly = (float) ((py * m00 - px * m01) / det);
 		hovered = lx >= 0 && ly >= 0 && lx < VW && ly < VH;
 
 		screen.width = VW;
 		screen.height = VH;
-		Gfx.pushXform(g, tlx, tly, 0f, s, s);
+		float m20 = (float) tl[0];
+		float m21 = (float) tl[1];
+		Gfx.pushAffine(g, m00, m01, m10, m11, m20, m21);
 		screen.drawPanel(g, hovered ? Math.round(lx) : -1000, hovered ? Math.round(ly) : -1000);
 		Gfx.popScale(g);
 

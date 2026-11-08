@@ -88,6 +88,12 @@ public final class Gfx {
 		g.pose().scale(sx, sy);
 	}
 
+	/** Dowolna transformacja afiniczna: x' = m00*x + m10*y + m20, y' = m01*x + m11*y + m21; trzeba zakonczyc popScale. */
+	public static void pushAffine(GuiGraphicsExtractor g, float m00, float m01, float m10, float m11, float m20, float m21) {
+		g.pose().pushMatrix();
+		g.pose().mul(new org.joml.Matrix3x2f(m00, m01, m10, m11, m20, m21));
+	}
+
 	/** Kolko o srodku (cx, cy) i promieniu r. */
 	public static void circle(GuiGraphicsExtractor g, float cx, float cy, float r, int color) {
 		int d = Math.max(2, Math.round(r * 2f));

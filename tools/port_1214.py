@@ -31,6 +31,7 @@ OLD_RULES = [
             (r'g\.pose\(\)\.pushMatrix\(\)', 'g.pose().pushPose()'),
             (r'g\.pose\(\)\.popMatrix\(\)', 'g.pose().popPose()'),
             (r'g\.pose\(\)\.scale\(s, s\)', 'g.pose().scale(s, s, 1f)'),
+            (r'g\.pose\(\)\.mul\(new org\.joml\.Matrix3x2f\(m00, m01, m10, m11, m20, m21\)\)', 'g.pose().mulPose(new org.joml.Matrix4f(m00, m01, 0f, 0f, m10, m11, 0f, 0f, 0f, 0f, 1f, 0f, m20, m21, 0f, 1f))'),
             (r'g\.pose\(\)\.scale\(sx, sy\)', 'g.pose().scale(sx, sy, 1f)'),
             (r'g\.pose\(\)\.translate\(x1, y1\)', 'g.pose().translate(x1, y1, 0f)'),
             (r'g\.pose\(\)\.rotate\((.+?)\);', r'g.pose().mulPose(new org.joml.Quaternionf().rotateZ(\1));'),
