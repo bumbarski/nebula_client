@@ -1,5 +1,6 @@
 package dev.nebula.client.module.impl;
 
+import dev.nebula.client.Compat;
 import dev.nebula.client.module.Category;
 import dev.nebula.client.module.Module;
 import dev.nebula.client.setting.NumberSetting;
@@ -17,7 +18,7 @@ public final class FlightModule extends Module {
 
 	@Override
 	public void onTick(Minecraft mc) {
-		if (mc.player == null || mc.screen != null) return;
+		if (mc.player == null || Compat.screen(mc) != null) return;
 		double yaw = Math.toRadians(mc.player.getYRot());
 		double f = (mc.options.keyUp.isDown() ? 1 : 0) - (mc.options.keyDown.isDown() ? 1 : 0);
 		double s = (mc.options.keyLeft.isDown() ? 1 : 0) - (mc.options.keyRight.isDown() ? 1 : 0);
