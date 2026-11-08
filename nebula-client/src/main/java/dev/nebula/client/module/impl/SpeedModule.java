@@ -7,7 +7,6 @@ import dev.nebula.client.setting.BoolSetting;
 import dev.nebula.client.setting.ModeSetting;
 import dev.nebula.client.util.MoveUtil;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.phys.Vec3;
 
 /** Speed — logika przeniesiona z ThunderHack Recode (GPL-3.0, pan4ur): tryby NCP, StrictStrafe, MatrixJB. */
@@ -79,15 +78,13 @@ public final class SpeedModule extends Module {
 		double ncpSpeed = strict || fwd < 1 ? 0.465 : 0.576;
 		double ncpBypassSpeed = strict || fwd < 1 ? 0.44 : 0.57;
 
-		var speedEffect = p.getEffect(MobEffects.SPEED);
-		if (speedEffect != null) {
-			double amp = speedEffect.getAmplifier();
+		if (MoveUtil.speedAmp() >= 0) {
+			double amp = MoveUtil.speedAmp();
 			ncpSpeed *= 1 + (0.2 * (amp + 1));
 			ncpBypassSpeed *= 1 + (0.2 * (amp + 1));
 		}
-		var slow = p.getEffect(MobEffects.SLOWNESS);
-		if (slow != null) {
-			double amp = slow.getAmplifier();
+		if (MoveUtil.slowAmp() >= 0) {
+			double amp = MoveUtil.slowAmp();
 			ncpSpeed /= 1 + (0.2 * (amp + 1));
 			ncpBypassSpeed /= 1 + (0.2 * (amp + 1));
 		}

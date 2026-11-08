@@ -38,11 +38,39 @@ public final class MoveUtil {
 		return new double[]{f * d * d3 + f2 * d * d2, f * d * d2 - f2 * d * d3};
 	}
 
+	/** Poziom efektu (0 = I) albo -1; nazwy efektow roznia sie miedzy wersjami, wiec przez refleksje. */
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public static int amp(String... names) {
+		var p = Minecraft.getInstance().player;
+		if (p == null) return -1;
+		for (String n : names) {
+			try {
+				Object holder = MobEffects.class.getField(n).get(null);
+				var inst = p.getEffect((net.minecraft.core.Holder) holder);
+				return inst == null ? -1 : inst.getAmplifier();
+			} catch (Throwable ignored) {
+			}
+		}
+		return -1;
+	}
+
+	public static int speedAmp() {
+		return amp("SPEED", "MOVEMENT_SPEED");
+	}
+
+	public static int slowAmp() {
+		return amp("SLOWNESS", "MOVEMENT_SLOWDOWN");
+	}
+
+	public static int jumpAmp() {
+		return amp("JUMP_BOOST", "JUMP");
+	}
+
 	public static double jumpSpeed() {
 		Minecraft mc = Minecraft.getInstance();
 		double jump = 0.3999999463558197;
-		var e = mc.player.getEffect(MobEffects.JUMP_BOOST);
-		if (e != null) jump += (e.getAmplifier() + 1) * 0.1;
+		int e = jumpAmp();
+		if (e >= 0) jump += (e + 1) * 0.1;
 		return jump;
 	}
 
@@ -50,12 +78,9 @@ public final class MoveUtil {
 		Minecraft mc = Minecraft.getInstance();
 		double d = 0.2873;
 		if (mc.player == null) return d;
-		var sp = mc.player.getEffect(MobEffects.SPEED);
-		if (sp != null) d *= 1.0 + 0.2 * (sp.getAmplifier() + 1);
-		var jb = mc.player.getEffect(MobEffects.JUMP_BOOST);
-		if (jb != null) d /= 1.0 + 0.2 * (jb.getAmplifier() + 1);
-		var sl = mc.player.getEffect(MobEffects.SLOWNESS);
-		if (sl != null) d /= 1.0 + 0.2 * (sl.getAmplifier() + 1);
+		if (speedAmp() >= 0) d *= 1.0 + 0.2 * (speedAmp() + 1);
+		if (jumpAmp() >= 0) d /= 1.0 + 0.2 * (jumpAmp() + 1);
+		if (slowAmp() >= 0) d /= 1.0 + (0.2 * (slowAmp() + 1));
 		return d;
 	}
 
