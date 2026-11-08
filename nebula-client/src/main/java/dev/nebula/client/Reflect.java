@@ -70,4 +70,35 @@ public final class Reflect {
 			}
 		}
 	}
+
+	/** Kod klawisza przypisanego do KeyMapping (przez zapis "key.keyboard.w"). */
+	public static int keyCode(net.minecraft.client.KeyMapping k) {
+		try {
+			Object key = com.mojang.blaze3d.platform.InputConstants.class.getMethod("getKey", String.class).invoke(null, k.saveString());
+			return (int) key.getClass().getMethod("getValue").invoke(key);
+		} catch (Throwable ignored) {
+			return -1;
+		}
+	}
+
+	public static boolean keyDown(Minecraft mc, int code) {
+		try {
+			Object window = mc.getWindow();
+			for (java.lang.reflect.Method m : com.mojang.blaze3d.platform.InputConstants.class.getMethods()) {
+				if (!m.getName().equals("isKeyDown") || m.getParameterCount() != 2) continue;
+				Class<?> pt = m.getParameterTypes()[0];
+				Object arg = window;
+				if (pt == long.class) {
+					try {
+						arg = window.getClass().getMethod("handle").invoke(window);
+					} catch (NoSuchMethodException e) {
+						arg = window.getClass().getMethod("getWindow").invoke(window);
+					}
+				}
+				return (boolean) m.invoke(null, arg, code);
+			}
+		} catch (Throwable ignored) {
+		}
+		return false;
+	}
 }
