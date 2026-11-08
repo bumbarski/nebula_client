@@ -65,6 +65,9 @@ public final class ModuleManager {
 		register(new GammaModule());
 		register(new ViewModelModule());
 
+		register(new dev.nebula.client.module.impl.FlightModule());
+		register(new dev.nebula.client.module.impl.SpeedModule());
+
 		register(freelook);
 		register(voice);
 		register(new ToggleKeysModule());
