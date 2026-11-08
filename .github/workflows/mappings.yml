@@ -1,0 +1,19 @@
+name: mappings
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/mappings/**'
+permissions:
+  contents: write
+jobs:
+  join:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/mappings/join.py 1.21.11
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: mappings
+          name: mappings
+          files: mappings-1.21.11.tsv
