@@ -84,6 +84,10 @@ public final class ModuleManager {
 		register(new dev.nebula.client.module.impl.AutoEzModule());
 		register(new dev.nebula.client.module.impl.NameProtectModule());
 
+		register(new dev.nebula.client.module.impl.FreecamModule());
+		register(new dev.nebula.client.module.impl.ChamsModule());
+		register(new dev.nebula.client.module.impl.AutoTrapModule());
+
 		register(freelook);
 		register(voice);
 		register(new ToggleKeysModule());
