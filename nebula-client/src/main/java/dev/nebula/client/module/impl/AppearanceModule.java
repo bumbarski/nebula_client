@@ -14,6 +14,8 @@ public final class AppearanceModule extends Module {
 	public final ModeSetting style = add(new ModeSetting("Styl", new String[]{"Szkło", "Ciemny"}, 0));
 	public final BoolSetting blur = add(new BoolSetting("Rozmycie tła menu", true));
 	public final NumberSetting menuSize = add(new NumberSetting("Rozmiar okna menu", 0.7, 1.5, 1.0, 0.05));
+	public final BoolSetting worldPanel = add(new BoolSetting("Menu jako panel w świecie (Vision Pro)", true));
+	public final NumberSetting panelSize = add(new NumberSetting("Rozmiar panelu w świecie", 0.6, 2.0, 1.0, 0.05));
 	public final BoolSetting animations = add(new BoolSetting("Animacje", true));
 
 	public AppearanceModule() {

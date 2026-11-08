@@ -50,6 +50,15 @@ public final class Theme {
 		return appearance == null ? 1f : appearance.menuSize.getFloat();
 	}
 
+	/** true = Prawy Shift stawia menu jako panel w swiecie (jak w goglach), false = zwykle okno. */
+	public static boolean worldPanel() {
+		return appearance != null && appearance.worldPanel.value;
+	}
+
+	public static float panelSize() {
+		return appearance == null ? 1f : appearance.panelSize.getFloat();
+	}
+
 	public static boolean animations() {
 		return appearance == null || appearance.animations.value;
 	}

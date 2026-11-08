@@ -43,6 +43,11 @@ public final class Projector {
 				mc.options.fov().get(), mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
 	}
 
+	/** Glebokosc punktu wzdluz kierunku patrzenia (w blokach). */
+	public double depth(double x, double y, double z) {
+		return (x - cx) * fx + (y - cy) * fy + (z - cz) * fz;
+	}
+
 	public double tanHalf() {
 		return tanHalf;
 	}

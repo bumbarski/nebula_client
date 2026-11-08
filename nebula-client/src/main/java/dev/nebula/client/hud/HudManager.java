@@ -40,6 +40,9 @@ public final class HudManager {
 			clamp(hud, sw, sh);
 			drawScaled(g, mc, hud, false);
 		}
+
+		// menu Nebuli jako panel w swiecie (tryb Vision Pro)
+		dev.nebula.client.ui.WorldPanel.render(g, mc);
 	}
 
 	/** Rysuje element z jego skala; w and h po wywolaniu sa juz po przeskalowaniu (do przesuwania w edytorze). */

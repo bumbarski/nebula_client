@@ -10,6 +10,7 @@ import dev.nebula.client.setting.ModeSetting;
 import dev.nebula.client.setting.NumberSetting;
 import dev.nebula.client.setting.Setting;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
@@ -57,6 +58,7 @@ public final class ClickGuiScreen extends Screen {
 	private int viewBottom;
 	private int contentH;
 	private Hit activeSlider;
+	private boolean world;
 
 	public ClickGuiScreen() {
 		super(Component.literal("Nebula"));
@@ -91,8 +93,24 @@ public final class ClickGuiScreen extends Screen {
 
 	// ---------------------------------------------------------------- rysowanie
 
+	/** Tryb panelu w swiecie: okno rysowane przez WorldPanel w wirtualnym rozmiarze w x h. */
+	public void forWorld(Minecraft mc, int w, int h) {
+		world = true;
+		minecraft = mc;
+		width = w;
+		height = h;
+	}
+
+	public void drawPanel(GuiGraphicsExtractor g, int mouseX, int mouseY) {
+		drawAll(g, mouseX, mouseY);
+	}
+
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+		drawAll(g, mouseX, mouseY);
+	}
+
+	private void drawAll(GuiGraphicsExtractor g, int mouseX, int mouseY) {
 		long now = System.nanoTime();
 		float dt = Math.min(0.1f, (now - lastFrame) / 1_000_000_000f);
 		lastFrame = now;
@@ -103,7 +121,7 @@ public final class ClickGuiScreen extends Screen {
 		hits.clear();
 
 		// rozmycie tla pomijamy z Irisem (shadery zmieniaja potok renderowania) i po pierwszym bledzie
-		if (Theme.glass() && Theme.blur() && !blurBroken && !FabricLoader.getInstance().isModLoaded("iris")) {
+		if (!world && Theme.glass() && Theme.blur() && !blurBroken && !FabricLoader.getInstance().isModLoaded("iris")) {
 			try {
 				extractBlurredBackground(g);
 			} catch (Throwable t) {
@@ -111,9 +129,11 @@ public final class ClickGuiScreen extends Screen {
 				NebulaClient.LOGGER.warn("Rozmycie tła menu wyłączone po błędzie: {}", t.toString());
 			}
 		}
-		Gfx.gradient(g, 0, 0, width, height,
-				Gfx.alpha(0xFF05050A, (Theme.glass() ? 0.28f : 0.50f) * a),
-				Gfx.alpha(Gfx.lerp(0xFF05050A, Theme.accentDark(), 0.30f), (Theme.glass() ? 0.45f : 0.66f) * a));
+		if (!world) {
+			Gfx.gradient(g, 0, 0, width, height,
+					Gfx.alpha(0xFF05050A, (Theme.glass() ? 0.28f : 0.50f) * a),
+					Gfx.alpha(Gfx.lerp(0xFF05050A, Theme.accentDark(), 0.30f), (Theme.glass() ? 0.45f : 0.66f) * a));
+		}
 
 		int winW = Math.min(width - 24, Math.round(500 * Theme.menuSize()));
 		int winH = Math.min(height - 24, Math.round(320 * Theme.menuSize()));
@@ -393,10 +413,12 @@ public final class ClickGuiScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-		double mx = event.x();
-		double my = event.y();
-		int button = event.button();
+		if (panelClick(event.x(), event.y(), event.button())) return true;
+		return super.mouseClicked(event, doubleClick);
+	}
 
+	/** Klik w wirtualnych wspolrzednych okna (uzywane tez przez panel w swiecie). */
+	public boolean panelClick(double mx, double my, int button) {
 		for (int i = hits.size() - 1; i >= 0; i--) {
 			Hit hit = hits.get(i);
 			if (!hit.contains(mx, my)) continue;
@@ -414,7 +436,23 @@ public final class ClickGuiScreen extends Screen {
 			}
 			return true;
 		}
-		return super.mouseClicked(event, doubleClick);
+		return false;
+	}
+
+	public void panelDrag(double mx) {
+		if (activeSlider != null) updateSlider(mx);
+	}
+
+	public void panelRelease() {
+		if (activeSlider != null) {
+			activeSlider = null;
+			ConfigManager.save(NebulaClient.modules());
+		}
+	}
+
+	public void panelScroll(double amount) {
+		scrollTarget -= (float) amount * 34f;
+		scrollTarget = Math.max(0f, Math.min(scrollTarget, Math.max(0, contentH - (viewBottom - viewTop))));
 	}
 
 	@Override

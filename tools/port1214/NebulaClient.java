@@ -5,6 +5,8 @@ import dev.nebula.client.config.ConfigManager;
 import dev.nebula.client.hud.HudManager;
 import dev.nebula.client.module.ModuleManager;
 import dev.nebula.client.ui.ClickGuiScreen;
+import dev.nebula.client.ui.Theme;
+import dev.nebula.client.ui.WorldPanel;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -20,6 +22,7 @@ public final class NebulaClient implements ClientModInitializer {
 
 	private static ModuleManager modules;
 	private static KeyMapping openGuiKey;
+	private static KeyMapping classicGuiKey;
 
 	public static ModuleManager modules() {
 		return modules;
@@ -33,7 +36,12 @@ public final class NebulaClient implements ClientModInitializer {
 		String category = "key.category.nebula.main";
 		openGuiKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 				"key.nebula.open_gui", InputConstants.Type.KEYSYM, InputConstants.KEY_RSHIFT, category));
+		classicGuiKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+				"key.nebula.open_gui_classic", InputConstants.Type.KEYSYM, InputConstants.KEY_RCONTROL, category));
 		modules.freelook().registerKey(category);
+		WorldPanel.registerKey(category);
+
+		ClientTickEvents.START_CLIENT_TICK.register(WorldPanel::tick);
 
 		ClientTickEvents.END_CLIENT_TICK.register(mc -> {
 			while (openGuiKey.consumeClick()) {

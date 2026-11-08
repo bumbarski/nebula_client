@@ -5,6 +5,8 @@ import dev.nebula.client.config.ConfigManager;
 import dev.nebula.client.hud.HudManager;
 import dev.nebula.client.module.ModuleManager;
 import dev.nebula.client.ui.ClickGuiScreen;
+import dev.nebula.client.ui.Theme;
+import dev.nebula.client.ui.WorldPanel;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -22,6 +24,7 @@ public final class NebulaClient implements ClientModInitializer {
 
 	private static ModuleManager modules;
 	private static KeyMapping openGuiKey;
+	private static KeyMapping classicGuiKey;
 
 	public static ModuleManager modules() {
 		return modules;
@@ -41,11 +44,26 @@ public final class NebulaClient implements ClientModInitializer {
 				category
 		));
 
+		classicGuiKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+				"key.nebula.open_gui_classic", InputConstants.Type.KEYSYM, InputConstants.KEY_RCONTROL, category));
 		modules.freelook().registerKey(category);
+		WorldPanel.registerKey(category);
+
+		ClientTickEvents.START_CLIENT_TICK.register(WorldPanel::tick);
 
 		ClientTickEvents.END_CLIENT_TICK.register(mc -> {
 			while (openGuiKey.consumeClick()) {
 				if (mc.player != null && dev.nebula.client.Compat.screen(mc) == null) {
+					if (Theme.worldPanel()) {
+						WorldPanel.toggle(mc);
+					} else {
+						dev.nebula.client.Compat.setScreen(mc, new ClickGuiScreen());
+					}
+				}
+			}
+			while (classicGuiKey.consumeClick()) {
+				if (mc.player != null && dev.nebula.client.Compat.screen(mc) == null) {
+					WorldPanel.close();
 					dev.nebula.client.Compat.setScreen(mc, new ClickGuiScreen());
 				}
 			}
