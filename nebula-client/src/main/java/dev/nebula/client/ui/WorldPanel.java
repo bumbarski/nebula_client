@@ -166,7 +166,7 @@ public final class WorldPanel {
 			}
 		}
 
-		int n = 14;
+		int n = 10;
 		double[] a = new double[2];
 		double[] b = new double[2];
 		if (!project(p, 0, VH / 2.0, w, h, a) || !project(p, VW, VH / 2.0, w, h, b)) {
@@ -210,9 +210,11 @@ public final class WorldPanel {
 					float sy = (float) (hp / VH);
 					float yc = (float) ((top[1] + bot[1]) / 2.0);
 					g.enableScissor(x0, 0, x1, p.sh);
+					Gfx.setClipX((int) Math.floor(u0), (int) Math.ceil(u1));
 					Gfx.pushXform(g, (float) (mid[0] - u0 * sxs), yc - VH / 2f * sy, 0f, (float) sxs, sy);
 					screen.drawPanel(g, mx, my);
 					Gfx.popScale(g);
+					Gfx.clearClipX();
 					g.disableScissor();
 				}
 			}

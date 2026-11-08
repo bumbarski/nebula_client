@@ -32,8 +32,29 @@ public final class Gfx {
 		return out;
 	}
 
+	/** Pozioma strefa przycinania (w wspolrzednych rysowania); uzywana przez panel w swiecie, zeby kazdy pasek rysowal tylko swoj kawalek. */
+	private static int clipLo = Integer.MIN_VALUE;
+	private static int clipHi = Integer.MAX_VALUE;
+
+	public static void setClipX(int lo, int hi) {
+		clipLo = lo;
+		clipHi = hi;
+	}
+
+	public static void clearClipX() {
+		clipLo = Integer.MIN_VALUE;
+		clipHi = Integer.MAX_VALUE;
+	}
+
+	private static void fillClipped(GuiGraphicsExtractor g, int x1, int y1, int x2, int y2, int color) {
+		if (x1 < clipLo) x1 = clipLo;
+		if (x2 > clipHi) x2 = clipHi;
+		if (x2 <= x1) return;
+		g.fill(x1, y1, x2, y2, color);
+	}
+
 	public static void rect(GuiGraphicsExtractor g, int x, int y, int w, int h, int color) {
-		g.fill(x, y, x + w, y + h, color);
+		fillClipped(g, x, y, x + w, y + h, color);
 	}
 
 	/** Pionowy gradient od c1 (gora) do c2 (dol). */
@@ -52,21 +73,23 @@ public final class Gfx {
 
 	/** Jak roundRect, ale kolor moze zalezec od wiersza (gradienty pionowe przycinane do ksztaltu). */
 	public static void roundRectRows(GuiGraphicsExtractor g, int x, int y, int w, int h, int r, IntUnaryOperator rowColor) {
+		if (x + w <= clipLo || x >= clipHi) return;
 		RoundGeom.fill(w, h, r, (row, x1, x2, cover) -> {
 			int c = rowColor.applyAsInt(row);
 			if ((c >>> 24) == 0) return;
 			if (cover < 1f) c = alpha(c, cover);
-			g.fill(x + x1, y + row, x + x2, y + row + 1, c);
+			fillClipped(g, x + x1, y + row, x + x2, y + row + 1, c);
 		});
 	}
 
 	/** Obwodka (1 px) zaokraglonego prostokata, kolor zalezny od wiersza. */
 	public static void roundOutline(GuiGraphicsExtractor g, int x, int y, int w, int h, int r, IntUnaryOperator rowColor) {
+		if (x + w <= clipLo || x >= clipHi) return;
 		RoundGeom.outline(w, h, r, (row, x1, x2, cover) -> {
 			int c = rowColor.applyAsInt(row);
 			if ((c >>> 24) == 0) return;
 			if (cover < 1f) c = alpha(c, cover);
-			g.fill(x + x1, y + row, x + x2, y + row + 1, c);
+			fillClipped(g, x + x1, y + row, x + x2, y + row + 1, c);
 		});
 	}
 
@@ -167,6 +190,7 @@ public final class Gfx {
 	}
 
 	public static void text(GuiGraphicsExtractor g, String s, int x, int y, int color, boolean shadow) {
+		if (clipLo != Integer.MIN_VALUE && (x >= clipHi || x + width(s) <= clipLo)) return;
 		g.text(Minecraft.getInstance().font, s, x, y, color, shadow);
 	}
 
