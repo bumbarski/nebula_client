@@ -133,21 +133,25 @@ public final class WorldPanel {
 		Projector p = Projector.create(mc);
 		double w = WIDTH_BLOCKS * Theme.panelSize();
 		double h = w * VH / VW;
-		double[] tl = new double[2];
-		double[] tr = new double[2];
-		double[] bl = new double[2];
+		double[] c = new double[2];
+		double[] xl = new double[2];
+		double[] xr = new double[2];
+		double[] yt = new double[2];
+		double[] yb = new double[2];
 		double hx = rx * w / 2.0;
 		double hz = rz * w / 2.0;
 		double hy = h / 2.0;
-		if (!p.toScreen(ax - hx, ay + hy, az - hz, tl) || !p.toScreen(ax + hx, ay + hy, az + hz, tr)
-				|| !p.toScreen(ax - hx, ay - hy, az - hz, bl)) {
+		if (!p.toScreen(ax, ay, az, c) || !p.toScreen(ax - hx, ay, az - hz, xl) || !p.toScreen(ax + hx, ay, az + hz, xr)
+				|| !p.toScreen(ax, ay + hy, az, yt) || !p.toScreen(ax, ay - hy, az, yb)) {
 			hovered = false;
 			return;
 		}
-		float m00 = (float) ((tr[0] - tl[0]) / VW);
-		float m01 = (float) ((tr[1] - tl[1]) / VW);
-		float m10 = (float) ((bl[0] - tl[0]) / VH);
-		float m11 = (float) ((bl[1] - tl[1]) / VH);
+		// transformacja liczona w srodku panelu (tekst zostaje poziomy, jak na tablicy zawieszonej na scianie)
+		float m00 = (float) ((xr[0] - xl[0]) / VW);
+		float m01 = (float) ((xr[1] - xl[1]) / VW);
+		float m10 = (float) ((yb[0] - yt[0]) / VH);
+		float m11 = (float) ((yb[1] - yt[1]) / VH);
+		double[] tl = {c[0] - (m00 * VW + m10 * VH) / 2.0, c[1] - (m01 * VW + m11 * VH) / 2.0};
 		double det = m00 * m11 - m10 * m01;
 		if (det <= 1e-6) {
 			// widzisz panel od tylu albo prawie z boku
