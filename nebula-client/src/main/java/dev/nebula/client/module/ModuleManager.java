@@ -68,6 +68,10 @@ public final class ModuleManager {
 		register(new dev.nebula.client.module.impl.FlightModule());
 		register(new dev.nebula.client.module.impl.SpeedModule());
 
+		register(new dev.nebula.client.module.impl.AutoArmorModule());
+		register(new dev.nebula.client.module.impl.ChestStealerModule());
+		register(new dev.nebula.client.module.impl.SpammerModule());
+
 		register(freelook);
 		register(voice);
 		register(new ToggleKeysModule());
