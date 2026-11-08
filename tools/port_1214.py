@@ -169,6 +169,8 @@ if MC == '1.21.11':
     d['jars'] = [{'file': 'META-INF/jars/lyricsflow.jar'}]
     d['entrypoints']['preLaunch'] = ['dev.nebula.client.NebulaPreLaunch']
     json.dump(d, open(mj2, 'w', encoding='utf-8'), indent=2)
+    # prawdziwy panel 3D (GPU) zamiast symulacji 2D
+    shutil.copy(os.path.join(TPL, 'WorldPanel3D.java'), os.path.join(JAVA, 'ui', 'WorldPanel.java'))
     # zakladka "Spotify" w menu Nebuli: ustawienia modu kolegi (kompilacja z jego jarem, w runtime jest w jar-in-jar)
     libs = os.path.join(DST, 'libs')
     os.makedirs(libs, exist_ok=True)
