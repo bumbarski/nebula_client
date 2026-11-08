@@ -148,45 +148,5 @@ mj = os.path.join(DST, 'src', 'main', 'resources', 'fabric.mod.json')
 t = open(mj, encoding='utf-8').read().replace('">=25"', '">=21"').replace('">=0.19.3"', '">=0.16.0"')
 open(mj, 'w', encoding='utf-8').write(t)
 
-# 1.21.11: tekst na niebie i pasek Spotify = oryginalny mod LyricsFlow (374m, za zgoda), wbudowany jako jar-in-jar
-if MC == '1.21.11':
-    import json
-    LF = os.path.join(TPL, 'lyricsflow')
-    for f in ('module/impl/MusicModule.java', 'module/impl/SkyLyricsModule.java'):
-        os.remove(os.path.join(JAVA, f))
-    mm = os.path.join(JAVA, 'module', 'ModuleManager.java')
-    t = open(mm, encoding='utf-8').read()
-    t = re.sub(r'\n\s*register\(new (MusicModule|SkyLyricsModule)\(\)\);', '', t)
-    t = re.sub(r'import dev\.nebula\.client\.module\.impl\.(MusicModule|SkyLyricsModule);\n', '', t)
-    open(mm, 'w', encoding='utf-8').write(t)
-    jars = os.path.join(DST, 'src', 'main', 'resources', 'META-INF', 'jars')
-    os.makedirs(jars, exist_ok=True)
-    shutil.copy(os.path.join(LF, 'lyricsflow.jar'), os.path.join(jars, 'lyricsflow.jar'))
-    shutil.copy(os.path.join(LF, 'NebulaPreLaunch.java'), os.path.join(JAVA, 'NebulaPreLaunch.java'))
-    mj2 = os.path.join(DST, 'src', 'main', 'resources', 'fabric.mod.json')
-    d = json.load(open(mj2, encoding='utf-8'))
-    d['jars'] = [{'file': 'META-INF/jars/lyricsflow.jar'}]
-    d['entrypoints']['preLaunch'] = ['dev.nebula.client.NebulaPreLaunch']
-    json.dump(d, open(mj2, 'w', encoding='utf-8'), indent=2)
-    # zakladka "Spotify" w menu Nebuli: ustawienia modu kolegi (kompilacja z jego jarem, w runtime jest w jar-in-jar)
-    libs = os.path.join(DST, 'libs')
-    os.makedirs(libs, exist_ok=True)
-    shutil.copy(os.path.join(LF, 'lyricsflow.jar'), os.path.join(libs, 'lyricsflow.jar'))
-    shutil.copy(os.path.join(LF, 'LyricsFlowModule.java'), os.path.join(JAVA, 'module', 'impl', 'LyricsFlowModule.java'))
-    bg = os.path.join(DST, 'build.gradle')
-    t = open(bg, encoding='utf-8').read()
-    t = t.replace('modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"',
-                  'modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"\n\tcompileOnly files("libs/lyricsflow.jar")', 1)
-    assert 'libs/lyricsflow.jar' in t
-    open(bg, 'w', encoding='utf-8').write(t)
-    cg = os.path.join(JAVA, 'module', 'Category.java')
-    t = open(cg, encoding='utf-8').read()
-    assert 'GAME("Gra");' in t
-    open(cg, 'w', encoding='utf-8').write(t.replace('GAME("Gra");', 'GAME("Gra"),\n\tSPOTIFY("Spotify");', 1))
-    t = open(mm, encoding='utf-8').read()
-    t = t.replace('register(new ToggleKeysModule());', 'register(new ToggleKeysModule());\n\t\tregister(new LyricsFlowModule());', 1)
-    t = t.replace('import dev.nebula.client.module.impl.FpsModule;', 'import dev.nebula.client.module.impl.FpsModule;\nimport dev.nebula.client.module.impl.LyricsFlowModule;', 1)
-    assert 'LyricsFlowModule;' in t and 'new LyricsFlowModule' in t
-    open(mm, 'w', encoding='utf-8').write(t)
 # mixin: bez mixinow z width (brak parametru) - ich brak jest bezpieczny dzieki defaultRequire 0
 print('OK: wygenerowano', DST)

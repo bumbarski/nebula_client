@@ -46,7 +46,7 @@ public final class MusicModule extends HudModule {
 	private int lastWordKey = Integer.MIN_VALUE;
 
 	public MusicModule() {
-		super("music", "Muzyka (Spotify)", "Tytuł, postęp i tekst piosenki z odtwarzacza w systemie", Category.HUD, false, 4, 110);
+		super("music", "Muzyka (Spotify)", "Tytuł, postęp i tekst piosenki z odtwarzacza w systemie", Category.SPOTIFY, false, 4, 110);
 	}
 
 	@Override

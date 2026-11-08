@@ -51,7 +51,7 @@ public final class SkyLyricsModule extends Module implements WorldOverlay {
 	private float beat;
 
 	public SkyLyricsModule() {
-		super("skylyrics", "Tekst na niebie", "Tekst piosenki ze Spotify wyświetlany na niebie", Category.VISUAL, false);
+		super("skylyrics", "Tekst na niebie", "Tekst piosenki ze Spotify wyświetlany na niebie", Category.SPOTIFY, false);
 	}
 
 	@Override
