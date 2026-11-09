@@ -10,35 +10,38 @@ import net.minecraft.world.inventory.ChestMenu;
 
 import java.util.Random;
 
-/** ChestStealer — logika przeniesiona z ThunderHack Recode (GPL-3.0, pan4ur): jeden przedmiot na opoznienie (ms), losowosc, zamykanie. */
+/** ChestStealer — logika przeniesiona z ThunderHack Recode (GPL-3.0, pan4ur): opoznienie w ms, losowosc, zamykanie po oproznieniu. */
 public final class ChestStealerModule extends Module {
 	private final NumberSetting delay = add(new NumberSetting("Opóźnienie (ms)", 0, 1000, 100, 10));
 	private final BoolSetting random = add(new BoolSetting("Losowe opóźnienie", false));
-	private final BoolSetting close = add(new BoolSetting("Zamknij gdy pusta", false));
+	private final BoolSetting close = add(new BoolSetting("Zamknij po oproznieniu", false));
 	private final Random rnd = new Random();
 	private long last;
+	private long wait;
 
 	public ChestStealerModule() {
-		super("cheststealer", "ChestStealer", "Zabiera przedmioty z otwartej skrzyni", Category.GAME, false);
+		super("cheststealer", "Chest Stealer", "Automatycznie zabiera zawartość otwartej skrzyni", Category.GAME, false);
 	}
 
 	@Override
 	public void onTick(Minecraft mc) {
-		if (mc.player == null || mc.gameMode == null || !(mc.player.containerMenu instanceof ChestMenu chest)) return;
-		int size = chest.getRowCount() * 9;
-		int d = delay.getInt();
+		if (mc.player == null || mc.gameMode == null) return;
+		if (!(mc.player.containerMenu instanceof ChestMenu menu)) return;
+		int size = menu.getRowCount() * 9;
 		long now = System.currentTimeMillis();
-		boolean empty = true;
-		for (int i = 0; i < size; i++) {
-			if (!chest.getSlot(i).hasItem()) continue;
-			empty = false;
-			long need = d + (random.value && d != 0 ? rnd.nextInt(d) : 0);
-			if (now - last >= need) {
-				Reflect.click(mc, chest.containerId, i, 0, "QUICK_MOVE");
-				last = now;
-				return;
+		if (now - last >= wait) {
+			for (int i = 0; i < size; i++) {
+				if (!menu.getSlot(i).getItem().isEmpty()) {
+					Reflect.click(mc, menu.containerId, i, 0, "QUICK_MOVE");
+					last = now;
+					wait = (long) (delay.get() + (random.value && delay.get() != 0 ? rnd.nextInt((int) delay.get()) : 0));
+					break;
+				}
 			}
 		}
-		if (empty && close.value) mc.player.closeContainer();
+		if (close.value) {
+			for (int i = 0; i < size; i++) if (!menu.getSlot(i).getItem().isEmpty()) return;
+			mc.player.closeContainer();
+		}
 	}
 }
