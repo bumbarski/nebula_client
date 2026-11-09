@@ -14,7 +14,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.monster.Enemy;
-import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
@@ -188,7 +187,7 @@ public final class KillAuraModule extends Module {
 			if (ignoreCreative.value && pl.isCreative()) return true;
 		} else if (e instanceof Animal) {
 			if (!animals.value) return true;
-		} else if (e instanceof Villager) {
+		} else if (e.getClass().getSimpleName().equals("Villager")) {
 			if (!villagers.value) return true;
 		} else if (e instanceof Enemy) {
 			if (!hostiles.value) return true;
