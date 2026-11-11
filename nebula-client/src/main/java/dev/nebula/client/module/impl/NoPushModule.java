@@ -3,12 +3,12 @@ package dev.nebula.client.module.impl;
 import dev.nebula.client.module.Category;
 import dev.nebula.client.module.Module;
 
-/** NoPush — gracze i moby nie odpychaja cie (przez mixin na Entity.push, jak w ThunderHack Recode, GPL-3.0, pan4ur). */
+/** No Push: blokuje wypychanie gracza z blokow (np. gdy perla wyladuje w scianie). Gracze i moby dalej cie popychaja. */
 public final class NoPushModule extends Module {
 	public static boolean active;
 
 	public NoPushModule() {
-		super("nopush", "NoPush", "Brak odpychania przez graczy i moby", Category.MOVEMENT, false);
+		super("nopush", "No Push", "Bloki nie wypychają cię z siebie (np. po perle)", Category.MOVEMENT, false);
 	}
 
 	@Override
