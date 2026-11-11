@@ -7,6 +7,7 @@ import dev.nebula.client.module.Module;
 import dev.nebula.client.setting.BoolSetting;
 import dev.nebula.client.setting.ModeSetting;
 import dev.nebula.client.setting.NumberSetting;
+import dev.nebula.client.util.SilentRot;
 import net.minecraft.client.Minecraft;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
@@ -34,7 +35,14 @@ public final class KillAuraModule extends Module {
 	private final NumberSetting attackRange = add(new NumberSetting("Zasięg", 1.0, 6.0, 3.1, 0.1));
 	private final NumberSetting wallRange = add(new NumberSetting("Zasięg przez ściany", 0.0, 6.0, 3.1, 0.1));
 	private final NumberSetting fov = add(new NumberSetting("FOV", 1, 180, 180, 1));
-	private final ModeSetting rotationMode = add(new ModeSetting("Rotacje", new String[]{"Track", "None"}, 0));
+	private final ModeSetting rotationMode = add(new ModeSetting("Rotacje", new String[]{"Track", "Interact", "Grim", "None"}, 0));
+	private final NumberSetting interactTicks = add(new NumberSetting("Interact ticki", 1, 10, 3, 1));
+	private final ModeSetting accelerate = add(new ModeSetting("Przyspiesz po trafieniu", new String[]{"Wyłączone", "Yaw", "Pitch", "Oba"}, 0));
+	private final BoolSetting clientLook = add(new BoolSetting("Kamera podąża (widoczne u Ciebie)", false));
+	private final BoolSetting shieldBreaker = add(new BoolSetting("ShieldBreaker (topór)", true));
+	private final BoolSetting unpressShield = add(new BoolSetting("Zdejmij tarczę przy ataku", true));
+	private final ModeSetting attackHand = add(new ModeSetting("Ręka ataku", new String[]{"Główna", "Druga"}, 0));
+	private int trackTicks;
 	private final ModeSetting sort = add(new ModeSetting("Sortowanie", new String[]{"Najbliższy", "Najdalszy", "FOV", "Najmniej HP", "Najwięcej HP"}, 0));
 	private final BoolSetting lockTarget = add(new BoolSetting("Blokuj cel", true));
 	private final ModeSetting weapon = add(new ModeSetting("Auto broń", new String[]{"Wyłączone", "Normalnie"}, 0));
@@ -74,6 +82,7 @@ public final class KillAuraModule extends Module {
 	private Vec3 rotMotion = Vec3.ZERO;
 	private int hitTicks;
 	private boolean lookingAtHitbox;
+	private boolean lastReady;
 
 	public KillAuraModule() {
 		super("killaura", "Aura", "Automatyczny atak (logika z ThunderHack Recode)", Category.COMBAT, false);
@@ -91,6 +100,7 @@ public final class KillAuraModule extends Module {
 	@Override
 	protected void onDisable() {
 		target = null;
+		SilentRot.clear();
 	}
 
 	private static float rnd(float a, float b) {
@@ -120,7 +130,10 @@ public final class KillAuraModule extends Module {
 			return;
 		}
 		updateTarget(mc);
-		if (target == null) return;
+		if (target == null) {
+			SilentRot.clear();
+			return;
+		}
 
 		if (!mc.options.keyJump.isDown() && p.onGround() && autoJump.value) {
 			Vec3 d = p.getDeltaMovement();
@@ -128,12 +141,17 @@ public final class KillAuraModule extends Module {
 		}
 
 		boolean crit = autoCrit(mc);
+		lastReady = crit;
 		calcRotations(mc);
-		boolean ready = crit && (lookingAtHitbox || rotationMode.index() == 1);
+		boolean ready = crit && (lookingAtHitbox || rotationMode.index() == 3);
 		if (!ready) return;
 
+		if (shieldBreaker(mc)) return;
+		boolean blocking = p.isUsingItem() && p.getUseItem().getUseAnimation() == net.minecraft.world.item.ItemUseAnimation.BLOCK;
+		if (blocking && unpressShield.value) mc.gameMode.releaseUsingItem(p);
 		boolean sprint = p.isSprinting();
 		if (sprint && dropSprint.value) p.setSprinting(false);
+		if (rotationMode.index() == 2 || SilentRot.on) SilentRot.sendRot(mc, rotYaw, rotPitch);
 		int prev = -1;
 		if (weapon.index() == 1) {
 			for (int i = 0; i < 9; i++) {
@@ -148,10 +166,31 @@ public final class KillAuraModule extends Module {
 		if (CriticalsModule.instance != null) CriticalsModule.instance.doCrit();
 		mc.gameMode.attack(p, target);
 		CriticalsModule.cancelCrit = false;
-		p.swing(InteractionHand.MAIN_HAND);
+		p.swing(attackHand.index() == 1 ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
 		hitTicks = hitTicks();
 		if (prev != -1) Reflect.selectSlot(mc, prev);
 		if (sprint && returnSprint.value && dropSprint.value) p.setSprinting(true);
+		if (rotationMode.index() == 2) SilentRot.sendRot(mc, p.getYRot(), p.getXRot());
+	}
+
+	private boolean shieldBreaker(Minecraft mc) {
+		if (!shieldBreaker.value || !(target instanceof Player tp)) return false;
+		if (!tp.isUsingItem() || !tp.isBlocking()) return false;
+		int axe = -1;
+		for (int i = 0; i < 9; i++) {
+			if (mc.player.getInventory().getItem(i).is(ItemTags.AXES)) {
+				axe = i;
+				break;
+			}
+		}
+		if (axe == -1) return false;
+		int prev = Reflect.selectedSlot(mc);
+		Reflect.selectSlot(mc, axe);
+		mc.gameMode.attack(mc.player, target);
+		mc.player.swing(InteractionHand.MAIN_HAND);
+		Reflect.selectSlot(mc, prev);
+		hitTicks = 10;
+		return true;
 	}
 
 	private int hitTicks() {
@@ -196,7 +235,7 @@ public final class KillAuraModule extends Module {
 		}
 		double d = distSqFromEyes(mc, e.position().add(0, e.getEyeHeight(), 0));
 		double r = range() + aimRange.get();
-		if (rotationMode.index() == 1) r = range();
+		if (rotationMode.index() == 3) r = range();
 		if (d > r * r + 4) return true;
 		return fovAngle(mc, e) > fov.get();
 	}
@@ -305,9 +344,13 @@ public final class KillAuraModule extends Module {
 	private void calcRotations(Minecraft mc) {
 		var p = mc.player;
 		if (target == null) return;
+		if (lastReady) trackTicks = interactTicks.getInt();
+		else if (trackTicks > 0) trackTicks--;
 		Vec3 tv = p.isFallFlying() ? target.getEyePosition() : legitLook(mc);
 		if (tv == null) return;
 		boolean track = rotationMode.index() == 0;
+		boolean ready = lastReady;
+		boolean grimMode = rotationMode.index() == 2;
 
 		pitchAcc = checkRtx(mc, rotYaw, rotPitch, range() + aimRange.getFloat(), range() + aimRange.getFloat())
 				? aimedPitchStep.getFloat()
@@ -318,20 +361,39 @@ public final class KillAuraModule extends Module {
 
 		float yawStep = track ? rnd(minYaw.getFloat(), maxYaw.getFloat()) : 360f;
 		float pitchStep = track ? (pitchAcc + rnd(-1f, 1f)) : 180f;
+		if (ready) {
+			switch (accelerate.index()) {
+				case 1 -> yawStep = 180f;
+				case 2 -> pitchStep = 90f;
+				case 3 -> {
+					yawStep = 180f;
+					pitchStep = 90f;
+				}
+				default -> {
+				}
+			}
+		}
 		if (dYaw > 180) dYaw -= 180;
 		float deltaYaw = Math.max(-yawStep, Math.min(yawStep, Math.abs(dYaw)));
 		float deltaPitch = Math.max(-pitchStep, Math.min(pitchStep, dPitch));
 		float newYaw = rotYaw + (dYaw > 0 ? deltaYaw : -deltaYaw);
 		float newPitch = Math.max(-90f, Math.min(90f, rotPitch + deltaPitch));
 		double gcd = Math.pow(mc.options.sensitivity().get() * 0.6 + 0.2, 3.0) * 1.2;
-		if (track) {
+		if (track || trackTicks > 0 || grimMode) {
 			rotYaw = (float) (newYaw - (newYaw - rotYaw) % gcd);
 			rotPitch = (float) (newPitch - (newPitch - rotPitch) % gcd);
-			p.setYRot(rotYaw);
-			p.setXRot(rotPitch);
 		} else {
 			rotYaw = p.getYRot();
 			rotPitch = p.getXRot();
+		}
+		if (clientLook.value) {
+			p.setYRot(rotYaw);
+			p.setXRot(rotPitch);
+			SilentRot.clear();
+		} else if (rotationMode.index() != 3) {
+			SilentRot.set(rotYaw, rotPitch);
+		} else {
+			SilentRot.clear();
 		}
 		lookingAtHitbox = checkRtx(mc, rotYaw, rotPitch, range(), wallRange.getFloat());
 	}
