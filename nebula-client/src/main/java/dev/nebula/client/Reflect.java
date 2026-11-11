@@ -7,25 +7,21 @@ public final class Reflect {
 	private Reflect() {
 	}
 
-	/** Klik w kontenerze danego typu (QUICK_MOVE, SWAP...). */
+	/** Klik w kontenerze danego typu (QUICK_MOVE, SWAP, PICKUP...). Szuka metody po sygnaturze (int,int,int,enum,Player), niezaleznie od nazwy. */
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static void click(Minecraft mc, int containerId, int slot, int button, String type) {
 		try {
-			Class<?> t;
-			try {
-				t = Class.forName("net.minecraft.world.inventory.ContainerInput");
-			} catch (ClassNotFoundException e) {
-				t = Class.forName("net.minecraft.world.inventory.ClickType");
-			}
-			Object v = Enum.valueOf((Class) t, type);
 			for (java.lang.reflect.Method m : mc.gameMode.getClass().getMethods()) {
 				Class<?>[] pt = m.getParameterTypes();
-				if (pt.length == 5 && pt[3] == t && (m.getName().equals("handleInventoryMouseClick") || m.getName().equals("handleContainerInput"))) {
-					m.invoke(mc.gameMode, containerId, slot, button, v, mc.player);
-					return;
-				}
+				if (pt.length != 5 || pt[0] != int.class || pt[1] != int.class || pt[2] != int.class || !pt[3].isEnum()) continue;
+				if (!pt[4].isAssignableFrom(mc.player.getClass())) continue;
+				Object v = Enum.valueOf((Class) pt[3], type);
+				m.invoke(mc.gameMode, containerId, slot, button, v, mc.player);
+				return;
 			}
-		} catch (Throwable ignored) {
+			System.err.println("[Nebula] Nie znaleziono metody klikania w kontenerze");
+		} catch (Throwable t) {
+			System.err.println("[Nebula] click: " + t);
 		}
 	}
 

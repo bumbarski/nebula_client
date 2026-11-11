@@ -96,6 +96,8 @@ public final class ModuleManager {
 		register(new dev.nebula.client.module.impl.PopArrowsModule());
 		register(new dev.nebula.client.module.impl.GuiMoveModule());
 
+		register(new dev.nebula.client.module.impl.FakePlayerModule());
+
 		register(freelook);
 		register(voice);
 		register(new ToggleKeysModule());
