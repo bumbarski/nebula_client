@@ -10,11 +10,11 @@ import net.minecraft.world.entity.LivingEntity;
 
 /** Gdy cel, ktorego ostatnio uderzyles, zginie, wysyla wiadomosc na czat. */
 public final class AutoEzModule extends Module {
-	private final ModeSetting text = add(new ModeSetting("Wiadomość", new String[]{"ez", "gg", "ez Nebula Client", "xD"}, 0));
+	private final ModeSetting text = add(new ModeSetting("Message", new String[]{"ez", "gg", "ez Nebula Client", "xD"}, 0));
 	private LivingEntity target;
 
 	public AutoEzModule() {
-		super("autoez", "Auto EZ", "Pisze na czacie po zabiciu przeciwnika", Category.GAME, false);
+		super("autoez", "Auto EZ", "Writes in chat after you kill a target", Category.GAME, false);
 	}
 
 	@Override

@@ -21,18 +21,18 @@ import net.minecraft.world.phys.Vec3;
  * zasieg, opoznienie w ms, Flatten, IgnoreWalls, AvoidLava; celuje w blok i kopie go (rotacja widoczna po stronie klienta).
  */
 public final class NukerModule extends Module {
-	private final ModeSetting blocks = add(new ModeSetting("Bloki", new String[]{"Wybrany (klik LPM)", "Wszystkie"}, 0));
-	private final NumberSetting range = add(new NumberSetting("Zasięg", 1.5, 6.0, 4.2, 0.1));
-	private final NumberSetting delay = add(new NumberSetting("Opóźnienie (ms)", 0, 1000, 25, 5));
-	private final BoolSetting ignoreWalls = add(new BoolSetting("Przez ściany", false));
-	private final BoolSetting flatten = add(new BoolSetting("Flatten (nie kop poniżej)", false));
-	private final BoolSetting avoidLava = add(new BoolSetting("Unikaj lawy", false));
+	private final ModeSetting blocks = add(new ModeSetting("Blocks", new String[]{"Select", "All"}, 0));
+	private final NumberSetting range = add(new NumberSetting("Range", 1.5, 6.0, 4.2, 0.1));
+	private final NumberSetting delay = add(new NumberSetting("Delay (ms)", 0, 1000, 25, 5));
+	private final BoolSetting ignoreWalls = add(new BoolSetting("Ignore Walls", false));
+	private final BoolSetting flatten = add(new BoolSetting("Flatten", false));
+	private final BoolSetting avoidLava = add(new BoolSetting("Avoid Lava", false));
 	private Block targetType;
 	private BlockPos current;
 	private long last;
 
 	public NukerModule() {
-		super("nuker", "Nuker", "Automatycznie niszczy bloki wokół (logika z ThunderHack)", Category.GAME, false);
+		super("nuker", "Nuker", "Breaks blocks around you (logic from ThunderHack)", Category.GAME, false);
 	}
 
 	@Override

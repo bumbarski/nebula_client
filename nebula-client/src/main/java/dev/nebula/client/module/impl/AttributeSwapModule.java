@@ -11,10 +11,10 @@ import net.minecraft.world.item.ItemStack;
 
 /** Przy ataku automatycznie wybiera z paska miecz albo topor. */
 public final class AttributeSwapModule extends Module {
-	private final ModeSetting prefer = add(new ModeSetting("Preferuj", new String[]{"Miecz", "Topór"}, 0));
+	private final ModeSetting prefer = add(new ModeSetting("Prefer", new String[]{"Sword", "Axe"}, 0));
 
 	public AttributeSwapModule() {
-		super("attributeswap", "Attribute Swap", "Przy ataku wybiera miecz lub topór z paska", Category.COMBAT, false);
+		super("attributeswap", "Attribute Swap", "Switches to a sword or axe on attack", Category.COMBAT, false);
 	}
 
 	@Override

@@ -18,13 +18,13 @@ import net.minecraft.world.item.equipment.Equippable;
  * z ekwipunku (i wymienia, jesli jest lepszy od zalozonego), z opoznieniem w tickach i opcja NoMove. Ocena: material, zaklecia, wytrzymalosc.
  */
 public final class AutoArmorModule extends Module {
-	private final NumberSetting delay = add(new NumberSetting("Opóźnienie (ticki)", 0, 10, 5, 1));
-	private final BoolSetting pauseInventory = add(new BoolSetting("Pauza w ekwipunku", false));
-	private final BoolSetting noMove = add(new BoolSetting("Tylko w bezruchu", false));
+	private final NumberSetting delay = add(new NumberSetting("Delay", 0, 10, 5, 1));
+	private final BoolSetting pauseInventory = add(new BoolSetting("Pause In Inventory", false));
+	private final BoolSetting noMove = add(new BoolSetting("No Move", false));
 	private int tickDelay;
 
 	public AutoArmorModule() {
-		super("autoarmor", "Auto Armor", "Sam zakłada i wymienia na lepszą zbroję", Category.GAME, false);
+		super("autoarmor", "Auto Armor", "Equips and swaps to better armor", Category.GAME, false);
 	}
 
 	private static int rank(ItemStack st) {

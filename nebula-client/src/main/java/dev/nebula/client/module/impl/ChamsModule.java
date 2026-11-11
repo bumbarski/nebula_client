@@ -10,10 +10,10 @@ import net.minecraft.world.entity.player.Player;
 
 /** Chams: podswietla graczy (i opcjonalnie moby) konturem widocznym przez sciany. */
 public final class ChamsModule extends Module {
-	private final BoolSetting mobs = add(new BoolSetting("Także moby", false));
+	private final BoolSetting mobs = add(new BoolSetting("Mobs", false));
 
 	public ChamsModule() {
-		super("chams", "Chams", "Kontur graczy widoczny przez ściany", Category.VISUAL, false);
+		super("chams", "Chams", "Glowing outline of players through walls", Category.VISUAL, false);
 	}
 
 	@Override

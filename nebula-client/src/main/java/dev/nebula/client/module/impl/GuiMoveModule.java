@@ -12,7 +12,7 @@ import net.minecraft.client.gui.screens.ChatScreen;
 /** Mozesz sie ruszac (WASD, spacja, shift) z otwartym ekwipunkiem i innymi oknami. */
 public final class GuiMoveModule extends Module {
 	public GuiMoveModule() {
-		super("guimove", "GUI Move", "Ruch z otwartym ekwipunkiem", Category.MOVEMENT, false);
+		super("guimove", "GUI Move", "Move while a GUI is open", Category.MOVEMENT, false);
 	}
 
 	@Override

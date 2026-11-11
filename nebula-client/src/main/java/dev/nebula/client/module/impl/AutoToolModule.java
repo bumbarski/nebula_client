@@ -11,14 +11,14 @@ import net.minecraft.world.phys.BlockHitResult;
 
 /** AutoTool — logika przeniesiona z ThunderHack Recode (GPL-3.0, pan4ur): najszybsze narzedzie, SwapBack po 300 ms, SaveItem. */
 public final class AutoToolModule extends Module {
-	private final BoolSetting swapBack = add(new BoolSetting("Wróć do poprzedniego", true));
-	private final BoolSetting saveItem = add(new BoolSetting("Oszczędzaj przedmioty (<10 wytrz.)", true));
+	private final BoolSetting swapBack = add(new BoolSetting("Swap Back", true));
+	private final BoolSetting saveItem = add(new BoolSetting("Save Item", true));
 	private int lastSlot = -1;
 	private boolean swap;
 	private long swapDelay;
 
 	public AutoToolModule() {
-		super("autotool", "Auto Tool", "Sam wybiera najlepsze narzędzie do bloku", Category.GAME, false);
+		super("autotool", "Auto Tool", "Picks the best tool for the block", Category.GAME, false);
 	}
 
 	private static int tool(Minecraft mc, BlockState st, boolean save) {

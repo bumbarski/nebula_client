@@ -8,7 +8,7 @@ public final class NoPushModule extends Module {
 	public static boolean active;
 
 	public NoPushModule() {
-		super("nopush", "No Push", "Bloki nie wypychają cię z siebie (np. po perle)", Category.MOVEMENT, false);
+		super("nopush", "No Push", "Blocks do not push you out of themselves (e.g. after a pearl)", Category.MOVEMENT, false);
 	}
 
 	@Override

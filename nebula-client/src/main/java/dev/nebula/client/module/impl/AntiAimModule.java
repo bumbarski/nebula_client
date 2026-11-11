@@ -9,10 +9,10 @@ import net.minecraft.client.Minecraft;
 
 /** Krecisz sie w miejscu (widoczne dla innych graczy). */
 public final class AntiAimModule extends Module {
-	private final NumberSetting speed = add(new NumberSetting("Prędkość obrotu", 5, 90, 30, 5));
+	private final NumberSetting speed = add(new NumberSetting("Rotation Speed", 5, 90, 30, 5));
 
 	public AntiAimModule() {
-		super("antiaim", "Anti Aim", "Ciągły obrót postaci", Category.COMBAT, false);
+		super("antiaim", "Anti Aim", "Spins your character", Category.COMBAT, false);
 	}
 
 	@Override

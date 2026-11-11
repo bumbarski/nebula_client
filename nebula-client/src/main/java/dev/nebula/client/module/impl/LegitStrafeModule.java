@@ -9,10 +9,10 @@ import net.minecraft.world.phys.Vec3;
 
 /** Lepsza kontrola w powietrzu: lekkie przyspieszenie w bok i do przodu podczas skoku. */
 public final class LegitStrafeModule extends Module {
-	private final NumberSetting power = add(new NumberSetting("Siła", 0.005, 0.05, 0.02, 0.005));
+	private final NumberSetting power = add(new NumberSetting("Power", 0.005, 0.05, 0.02, 0.005));
 
 	public LegitStrafeModule() {
-		super("legitstrafe", "Legit Strafe", "Lepsza kontrola ruchu w powietrzu", Category.MOVEMENT, false);
+		super("legitstrafe", "Legit Strafe", "Better air control", Category.MOVEMENT, false);
 	}
 
 	@Override

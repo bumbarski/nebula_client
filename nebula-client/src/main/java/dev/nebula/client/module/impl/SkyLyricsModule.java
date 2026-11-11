@@ -28,7 +28,7 @@ import java.util.Random;
  * Tryb "Ekran" ustawia prosty tekst na gorze ekranu.
  */
 public final class SkyLyricsModule extends Module implements WorldOverlay {
-	private final ModeSetting mode = add(new ModeSetting("Tryb", new String[]{"Niebo (świat)", "Ekran (góra)"}, 0));
+	private final ModeSetting mode = add(new ModeSetting("Mode", new String[]{"Niebo (świat)", "Ekran (góra)"}, 0));
 	private final NumberSetting size = add(new NumberSetting("Rozmiar", 2, 12, 4, 0.5));
 	private final NumberSetting lines = add(new NumberSetting("Linie tekstu (tryb Ekran)", 1, 5, 3, 2));
 	private final NumberSetting elevation = add(new NumberSetting("Maks. wysokość nad horyzontem (°)", 5, 80, 45, 1));

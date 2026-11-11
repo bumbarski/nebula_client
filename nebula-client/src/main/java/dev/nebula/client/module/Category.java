@@ -3,8 +3,8 @@ package dev.nebula.client.module;
 public enum Category {
 	HUD("HUD"),
 	VISUAL("Wizualne"),
-	COMBAT("Walka"),
-	MOVEMENT("Ruch"),
+	COMBAT("Combat"),
+	MOVEMENT("Movement"),
 	GAME("Gra"),
 	SPOTIFY("Spotify");
 

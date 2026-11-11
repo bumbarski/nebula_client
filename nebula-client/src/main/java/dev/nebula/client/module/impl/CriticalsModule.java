@@ -9,10 +9,10 @@ import net.minecraft.client.Minecraft;
 public final class CriticalsModule extends Module {
 	public static CriticalsModule instance;
 	public static boolean cancelCrit;
-	private final ModeSetting mode = add(new ModeSetting("Tryb", new String[]{"Ncp", "Strict", "OldNCP", "UpdatedNCP", "Grim"}, 0));
+	private final ModeSetting mode = add(new ModeSetting("Mode", new String[]{"Ncp", "Strict", "OldNCP", "UpdatedNCP", "Grim"}, 0));
 
 	public CriticalsModule() {
-		super("criticals", "Criticals", "Krytyki przez pakiety pozycji przed atakiem", Category.COMBAT, false);
+		super("criticals", "Criticals", "Packet crits right before an attack", Category.COMBAT, false);
 		instance = this;
 	}
 

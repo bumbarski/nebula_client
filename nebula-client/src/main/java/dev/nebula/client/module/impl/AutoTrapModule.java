@@ -19,14 +19,14 @@ import net.minecraft.world.phys.Vec3;
 
 /** Auto Trap / Auto Web: stawia bloki (obsydian albo pajeczyne) wokol najblizszego gracza. */
 public final class AutoTrapModule extends Module {
-	private final ModeSetting mode = add(new ModeSetting("Tryb", new String[]{"Pułapka z bloków", "Pajęczyna"}, 0));
-	private final NumberSetting range = add(new NumberSetting("Zasięg", 2, 5, 4.5, 0.5));
+	private final ModeSetting mode = add(new ModeSetting("Mode", new String[]{"Trap", "Web"}, 0));
+	private final NumberSetting range = add(new NumberSetting("Range", 2, 5, 4.5, 0.5));
 	private int ticks;
 
 	private static final int[][] CAGE = {{1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}, {1, 1, 0}, {-1, 1, 0}, {0, 1, 1}, {0, 1, -1}, {0, 2, 0}};
 
 	public AutoTrapModule() {
-		super("autotrap", "Auto Trap / Web", "Stawia bloki lub pajęczynę wokół najbliższego gracza", Category.COMBAT, false);
+		super("autotrap", "Auto Trap / Web", "Places blocks or webs around the nearest player", Category.COMBAT, false);
 	}
 
 	@Override

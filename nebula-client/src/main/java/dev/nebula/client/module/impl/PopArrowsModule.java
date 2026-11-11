@@ -7,7 +7,7 @@ import net.minecraft.client.Minecraft;
 /** Usuwa wbite w ciebie strzaly (nie zaslaniaja juz modelu postaci). */
 public final class PopArrowsModule extends Module {
 	public PopArrowsModule() {
-		super("poparrows", "Pop Arrows", "Ukrywa strzały wbite w postać", Category.VISUAL, false);
+		super("poparrows", "Pop Arrows", "Hides arrows stuck in your body", Category.VISUAL, false);
 	}
 
 	@Override

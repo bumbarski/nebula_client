@@ -8,7 +8,7 @@ public final class NoCameraClipModule extends Module {
 	public static boolean active;
 
 	public NoCameraClipModule() {
-		super("nocameraclip", "No Camera Clip", "Kamera 3. osoby nie zatrzymuje się na ścianach", Category.VISUAL, false);
+		super("nocameraclip", "No Camera Clip", "Third-person camera does not clip into walls", Category.VISUAL, false);
 	}
 
 	@Override

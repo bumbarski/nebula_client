@@ -32,49 +32,49 @@ import java.util.concurrent.ThreadLocalRandom;
  * Uproszczenia: rotacje sa widoczne po stronie klienta (brak silent rotation), bez Resolvera i trybow Grim/Interact.
  */
 public final class KillAuraModule extends Module {
-	private final NumberSetting attackRange = add(new NumberSetting("Zasięg", 1.0, 6.0, 3.1, 0.1));
-	private final NumberSetting wallRange = add(new NumberSetting("Zasięg przez ściany", 0.0, 6.0, 3.1, 0.1));
+	private final NumberSetting attackRange = add(new NumberSetting("Range", 1.0, 6.0, 3.1, 0.1));
+	private final NumberSetting wallRange = add(new NumberSetting("Through Walls Range", 0.0, 6.0, 3.1, 0.1));
 	private final NumberSetting fov = add(new NumberSetting("FOV", 1, 180, 180, 1));
-	private final ModeSetting rotationMode = add(new ModeSetting("Rotacje", new String[]{"Track", "Interact", "Grim", "None"}, 0));
-	private final NumberSetting interactTicks = add(new NumberSetting("Interact ticki", 1, 10, 3, 1));
-	private final ModeSetting accelerate = add(new ModeSetting("Przyspiesz po trafieniu", new String[]{"Wyłączone", "Yaw", "Pitch", "Oba"}, 0));
-	private final BoolSetting clientLook = add(new BoolSetting("Kamera podąża (widoczne u Ciebie)", false));
-	private final BoolSetting shieldBreaker = add(new BoolSetting("ShieldBreaker (topór)", true));
-	private final BoolSetting unpressShield = add(new BoolSetting("Zdejmij tarczę przy ataku", true));
-	private final ModeSetting attackHand = add(new ModeSetting("Ręka ataku", new String[]{"Główna", "Druga"}, 0));
+	private final ModeSetting rotationMode = add(new ModeSetting("Rotation Mode", new String[]{"Track", "Interact", "Grim", "None"}, 0));
+	private final NumberSetting interactTicks = add(new NumberSetting("Interact Ticks", 1, 10, 3, 1));
+	private final ModeSetting accelerate = add(new ModeSetting("Accelerate On Hit", new String[]{"Off", "Yaw", "Pitch", "Both"}, 0));
+	private final BoolSetting clientLook = add(new BoolSetting("Client Look", false));
+	private final BoolSetting shieldBreaker = add(new BoolSetting("Shield Breaker", true));
+	private final BoolSetting unpressShield = add(new BoolSetting("Unpress Shield", true));
+	private final ModeSetting attackHand = add(new ModeSetting("Attack Hand", new String[]{"Main Hand", "Off Hand"}, 0));
 	private int trackTicks;
-	private final ModeSetting sort = add(new ModeSetting("Sortowanie", new String[]{"Najbliższy", "Najdalszy", "FOV", "Najmniej HP", "Najwięcej HP"}, 0));
-	private final BoolSetting lockTarget = add(new BoolSetting("Blokuj cel", true));
-	private final ModeSetting weapon = add(new ModeSetting("Auto broń", new String[]{"Wyłączone", "Normalnie"}, 0));
-	private final BoolSetting onlyWeapon = add(new BoolSetting("Tylko z bronią", false));
+	private final ModeSetting sort = add(new ModeSetting("Sort", new String[]{"Lowest Distance", "Highest Distance", "FOV", "Lowest Health", "Highest Health"}, 0));
+	private final BoolSetting lockTarget = add(new BoolSetting("Lock Target", true));
+	private final ModeSetting weapon = add(new ModeSetting("Auto Weapon", new String[]{"Off", "Normal"}, 0));
+	private final BoolSetting onlyWeapon = add(new BoolSetting("Only Weapon", false));
 	private final BoolSetting smartCrit = add(new BoolSetting("SmartCrit", true));
-	private final BoolSetting onlyCrit = add(new BoolSetting("Tylko krytyki", false));
+	private final BoolSetting onlyCrit = add(new BoolSetting("Only Crit", false));
 	private final BoolSetting autoJump = add(new BoolSetting("AutoJump", false));
-	private final BoolSetting pauseWhileEating = add(new BoolSetting("Pauza przy jedzeniu", false));
-	private final BoolSetting pauseInInventory = add(new BoolSetting("Pauza w ekwipunku", true));
+	private final BoolSetting pauseWhileEating = add(new BoolSetting("Pause While Eating", false));
+	private final BoolSetting pauseInInventory = add(new BoolSetting("Pause In Inventory", true));
 	private final BoolSetting dropSprint = add(new BoolSetting("DropSprint", true));
 	private final BoolSetting returnSprint = add(new BoolSetting("ReturnSprint", true));
 	private final BoolSetting oldDelay = add(new BoolSetting("OldDelay (CPS)", false));
 	private final NumberSetting minCps = add(new NumberSetting("Min CPS", 1, 20, 7, 1));
 	private final NumberSetting maxCps = add(new NumberSetting("Max CPS", 1, 20, 12, 1));
-	private final NumberSetting attackCooldown = add(new NumberSetting("Cooldown ataku", 0.5, 1.0, 0.9, 0.05));
-	private final NumberSetting attackBaseTime = add(new NumberSetting("Bazowy czas ataku", 0.0, 2.0, 0.5, 0.05));
-	private final NumberSetting attackTickLimit = add(new NumberSetting("Limit ticków ataku", 0, 20, 11, 1));
-	private final NumberSetting critFall = add(new NumberSetting("Dystans spadku krytyka", 0.0, 1.0, 0.0, 0.05));
-	private final NumberSetting aimRange = add(new NumberSetting("Zasięg celowania", 0.0, 6.0, 3.1, 0.1));
-	private final NumberSetting minYaw = add(new NumberSetting("Min krok yaw", 1, 180, 65, 1));
-	private final NumberSetting maxYaw = add(new NumberSetting("Max krok yaw", 1, 180, 75, 1));
-	private final NumberSetting maxPitchStep = add(new NumberSetting("Max krok pitch", 1, 90, 8, 1));
-	private final NumberSetting aimedPitchStep = add(new NumberSetting("Krok pitch (na celu)", 0, 90, 1, 0.5));
-	private final NumberSetting pitchAccelerate = add(new NumberSetting("Przyspieszenie pitch", 1, 10, 1.65, 0.05));
-	private final BoolSetting players = add(new BoolSetting("Gracze", true));
-	private final BoolSetting mobs = add(new BoolSetting("Moby", true));
-	private final BoolSetting animals = add(new BoolSetting("Zwierzęta", true));
-	private final BoolSetting villagers = add(new BoolSetting("Mieszkańcy", true));
-	private final BoolSetting hostiles = add(new BoolSetting("Wrogie", true));
-	private final BoolSetting ignoreInvisible = add(new BoolSetting("Ignoruj niewidzialne", false));
-	private final BoolSetting ignoreNamed = add(new BoolSetting("Ignoruj nazwane", false));
-	private final BoolSetting ignoreCreative = add(new BoolSetting("Ignoruj tryb kreatywny", true));
+	private final NumberSetting attackCooldown = add(new NumberSetting("Attack Cooldown", 0.5, 1.0, 0.9, 0.05));
+	private final NumberSetting attackBaseTime = add(new NumberSetting("Attack Base Time", 0.0, 2.0, 0.5, 0.05));
+	private final NumberSetting attackTickLimit = add(new NumberSetting("Attack Tick Limit", 0, 20, 11, 1));
+	private final NumberSetting critFall = add(new NumberSetting("Crit Fall Distance", 0.0, 1.0, 0.0, 0.05));
+	private final NumberSetting aimRange = add(new NumberSetting("Aim Range", 0.0, 6.0, 3.1, 0.1));
+	private final NumberSetting minYaw = add(new NumberSetting("Min Yaw Step", 1, 180, 65, 1));
+	private final NumberSetting maxYaw = add(new NumberSetting("Max Yaw Step", 1, 180, 75, 1));
+	private final NumberSetting maxPitchStep = add(new NumberSetting("Max Pitch Step", 1, 90, 8, 1));
+	private final NumberSetting aimedPitchStep = add(new NumberSetting("Aimed Pitch Step", 0, 90, 1, 0.5));
+	private final NumberSetting pitchAccelerate = add(new NumberSetting("Pitch Accelerate", 1, 10, 1.65, 0.05));
+	private final BoolSetting players = add(new BoolSetting("Players", true));
+	private final BoolSetting mobs = add(new BoolSetting("Mobs", true));
+	private final BoolSetting animals = add(new BoolSetting("Animals", true));
+	private final BoolSetting villagers = add(new BoolSetting("Villagers", true));
+	private final BoolSetting hostiles = add(new BoolSetting("Hostiles", true));
+	private final BoolSetting ignoreInvisible = add(new BoolSetting("Ignore Invisible", false));
+	private final BoolSetting ignoreNamed = add(new BoolSetting("Ignore Named", false));
+	private final BoolSetting ignoreCreative = add(new BoolSetting("Ignore Creative", true));
 
 	private Entity target;
 	private float rotYaw, rotPitch, pitchAcc = 1f;
@@ -85,7 +85,7 @@ public final class KillAuraModule extends Module {
 	private boolean lastReady;
 
 	public KillAuraModule() {
-		super("killaura", "Aura", "Automatyczny atak (logika z ThunderHack Recode)", Category.COMBAT, false);
+		super("killaura", "Aura", "Automatically attacks targets (logic from ThunderHack Recode)", Category.COMBAT, false);
 	}
 
 	@Override

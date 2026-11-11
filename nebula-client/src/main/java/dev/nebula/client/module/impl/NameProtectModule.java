@@ -11,7 +11,7 @@ public final class NameProtectModule extends Module {
 	private static NameProtectModule self;
 
 	public NameProtectModule() {
-		super("nameprotect", "Name Protect", "Ukrywa twój nick w czacie", Category.VISUAL, false);
+		super("nameprotect", "Name Protect", "Hides your name in chat", Category.VISUAL, false);
 		self = this;
 		ClientReceiveMessageEvents.MODIFY_GAME.register((msg, overlay) -> {
 			Minecraft mc = Minecraft.getInstance();

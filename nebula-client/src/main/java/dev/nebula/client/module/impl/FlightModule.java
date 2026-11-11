@@ -12,14 +12,14 @@ import net.minecraft.world.phys.Vec3;
 
 /** Flight — tryby przeniesione z ThunderHack Recode (GPL-3.0, pan4ur): Vanilla, AirJump, MatrixGlide, MatrixJump, Creative. */
 public final class FlightModule extends Module {
-	private final ModeSetting mode = add(new ModeSetting("Tryb", new String[]{"Vanilla", "AirJump", "MatrixGlide", "MatrixJump", "Creative"}, 0));
-	private final NumberSetting hSpeed = add(new NumberSetting("Poziomo", 0.0, 10.0, 1.0, 0.1));
-	private final NumberSetting vSpeed = add(new NumberSetting("Pionowo", 0.0, 5.0, 0.78, 0.01));
+	private final ModeSetting mode = add(new ModeSetting("Mode", new String[]{"Vanilla", "AirJump", "MatrixGlide", "MatrixJump", "Creative"}, 0));
+	private final NumberSetting hSpeed = add(new NumberSetting("Horizontal", 0.0, 10.0, 1.0, 0.1));
+	private final NumberSetting vSpeed = add(new NumberSetting("Vertical", 0.0, 5.0, 0.78, 0.01));
 	private final BoolSetting antiKick = add(new BoolSetting("AntiKick (Vanilla/Creative)", false));
 	private int flyTicks;
 
 	public FlightModule() {
-		super("flight", "Flight", "Latanie (tryby z ThunderHack)", Category.MOVEMENT, false);
+		super("flight", "Flight", "Fly (modes from ThunderHack)", Category.MOVEMENT, false);
 	}
 
 	@Override

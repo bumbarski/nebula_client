@@ -13,7 +13,7 @@ public final class OffHandModule extends Module {
 	private int ticks;
 
 	public OffHandModule() {
-		super("offhand", "Off Hand", "Sam przekłada totem do drugiej ręki", Category.COMBAT, false);
+		super("offhand", "Off Hand", "Moves a totem into your offhand", Category.COMBAT, false);
 	}
 
 	@Override

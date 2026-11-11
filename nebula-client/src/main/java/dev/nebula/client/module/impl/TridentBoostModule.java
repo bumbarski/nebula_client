@@ -7,10 +7,10 @@ import net.minecraft.client.Minecraft;
 
 /** Mocniejszy zryw z trojzebem z Riptide. */
 public final class TridentBoostModule extends Module {
-	private final NumberSetting boost = add(new NumberSetting("Mnożnik", 1.0, 3.0, 1.5, 0.1));
+	private final NumberSetting boost = add(new NumberSetting("Multiplier", 1.0, 3.0, 1.5, 0.1));
 
 	public TridentBoostModule() {
-		super("tridentboost", "Trident Boost", "Wzmacnia zryw trójzębu Riptide", Category.MOVEMENT, false);
+		super("tridentboost", "Trident Boost", "Boosts Riptide trident dash", Category.MOVEMENT, false);
 	}
 
 	@Override

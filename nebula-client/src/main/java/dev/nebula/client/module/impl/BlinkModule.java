@@ -16,7 +16,7 @@ public final class BlinkModule extends Module {
 	private static final List<Packet<?>> queue = new ArrayList<>();
 
 	public BlinkModule() {
-		super("blink", "Blink", "Wstrzymuje pakiety ruchu do wyłączenia modułu", Category.MOVEMENT, false);
+		super("blink", "Blink", "Holds movement packets until disabled", Category.MOVEMENT, false);
 	}
 
 	public static boolean intercept(Packet<?> p) {

@@ -10,7 +10,7 @@ import net.minecraft.client.Minecraft;
 /** Brak opoznienia skoku przy trzymaniu spacji. */
 public final class NoDelayModule extends Module {
 	public NoDelayModule() {
-		super("nodelay", "No Delay", "Brak opóźnienia skoku", Category.MOVEMENT, false);
+		super("nodelay", "No Delay", "No jump delay", Category.MOVEMENT, false);
 	}
 
 	@Override

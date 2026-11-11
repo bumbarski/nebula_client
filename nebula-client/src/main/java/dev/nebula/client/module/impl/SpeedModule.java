@@ -11,9 +11,9 @@ import net.minecraft.world.phys.Vec3;
 
 /** Speed — logika przeniesiona z ThunderHack Recode (GPL-3.0, pan4ur): tryby NCP, StrictStrafe, MatrixJB. */
 public final class SpeedModule extends Module {
-	private final ModeSetting mode = add(new ModeSetting("Tryb", new String[]{"NCP", "StrictStrafe", "MatrixJB"}, 0));
-	private final BoolSetting pauseInLiquids = add(new BoolSetting("Pauza w wodzie", false));
-	private final BoolSetting pauseWhileSneaking = add(new BoolSetting("Pauza przy skradaniu", false));
+	private final ModeSetting mode = add(new ModeSetting("Mode", new String[]{"NCP", "StrictStrafe", "MatrixJB"}, 0));
+	private final BoolSetting pauseInLiquids = add(new BoolSetting("Pause In Liquids", false));
+	private final BoolSetting pauseWhileSneaking = add(new BoolSetting("Pause While Sneaking", false));
 
 	private double baseSpeed = 0.2873;
 	private int stage = 1;
@@ -21,7 +21,7 @@ public final class SpeedModule extends Module {
 	private float prevForward;
 
 	public SpeedModule() {
-		super("speed", "Speed", "Szybkie bieganie (tryby z ThunderHack)", Category.MOVEMENT, false);
+		super("speed", "Speed", "Faster movement (modes from ThunderHack)", Category.MOVEMENT, false);
 	}
 
 	@Override

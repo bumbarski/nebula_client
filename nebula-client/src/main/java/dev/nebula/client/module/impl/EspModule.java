@@ -26,7 +26,7 @@ import java.util.Map;
 public abstract class EspModule extends Module implements WorldOverlay {
 	private static final int MAX_FOUND = 6000;
 
-	protected final NumberSetting range = add(new NumberSetting("Zasięg", 8, 64, 32, 4));
+	protected final NumberSetting range = add(new NumberSetting("Range", 8, 64, 32, 4));
 	protected final NumberSetting maxCount = add(new NumberSetting("Maks. liczba celów", 20, 400, 200, 20));
 	protected final BoolSetting tracers = add(new BoolSetting("Tracery", true));
 

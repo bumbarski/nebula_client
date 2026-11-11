@@ -12,15 +12,15 @@ import java.util.Random;
 
 /** ChestStealer — logika przeniesiona z ThunderHack Recode (GPL-3.0, pan4ur): opoznienie w ms, losowosc, zamykanie po oproznieniu. */
 public final class ChestStealerModule extends Module {
-	private final NumberSetting delay = add(new NumberSetting("Opóźnienie (ms)", 0, 1000, 100, 10));
-	private final BoolSetting random = add(new BoolSetting("Losowe opóźnienie", false));
-	private final BoolSetting close = add(new BoolSetting("Zamknij po oproznieniu", false));
+	private final NumberSetting delay = add(new NumberSetting("Delay (ms)", 0, 1000, 100, 10));
+	private final BoolSetting random = add(new BoolSetting("Random", false));
+	private final BoolSetting close = add(new BoolSetting("Close When Empty", false));
 	private final Random rnd = new Random();
 	private long last;
 	private long wait;
 
 	public ChestStealerModule() {
-		super("cheststealer", "Chest Stealer", "Automatycznie zabiera zawartość otwartej skrzyni", Category.GAME, false);
+		super("cheststealer", "Chest Stealer", "Steals the contents of an opened chest", Category.GAME, false);
 	}
 
 	@Override

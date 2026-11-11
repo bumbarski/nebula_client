@@ -15,7 +15,7 @@ public final class FakePlayerModule extends Module {
 	private static int nextId = -4242;
 
 	public FakePlayerModule() {
-		super("fakeplayer", "Fake Player", "Atrapa gracza do testów (widoczna tylko u ciebie)", Category.GAME, false);
+		super("fakeplayer", "Fake Player", "Fake player for testing (visible only to you)", Category.GAME, false);
 	}
 
 	@Override

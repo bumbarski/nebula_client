@@ -12,11 +12,11 @@ import net.minecraft.world.entity.decoration.ArmorStand;
 
 /** Freecam: kamera odlacza sie od postaci i lata swobodnie, a postac stoi w miejscu. */
 public final class FreecamModule extends Module {
-	private final NumberSetting speed = add(new NumberSetting("Prędkość", 0.2, 3.0, 0.8, 0.1));
+	private final NumberSetting speed = add(new NumberSetting("Speed", 0.2, 3.0, 0.8, 0.1));
 	private ArmorStand cam;
 
 	public FreecamModule() {
-		super("freecam", "Freecam", "Latająca kamera, postać zostaje w miejscu", Category.VISUAL, false);
+		super("freecam", "Freecam", "Free camera, your character stays in place", Category.VISUAL, false);
 		ClientTickEvents.START_CLIENT_TICK.register(this::startTick);
 	}
 
